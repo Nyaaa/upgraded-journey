@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from .serializers import PerevalAddedSerializer
+from rest_framework import viewsets
+from .models import PerevalAdded
 
-# Create your views here.
+
+class PerevalAddedViewSet(viewsets.ModelViewSet):
+    serializer_class = PerevalAddedSerializer
+    queryset = PerevalAdded.objects.all()
