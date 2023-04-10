@@ -6,27 +6,24 @@ services:
     restart: unless-stopped
     container_name: 'FSTR_DB'
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: FSTR
+      POSTGRES_USER: ${FSTR_DB_LOGIN:-postgres}
+      POSTGRES_PASSWORD: ${FSTR_DB_PASS:-changeme}
     volumes:
       - postgres:/var/lib/postgresql/data
     ports:
-      - "${PORT:-5432}:${PORT:-5432}"
+      - "${FSTR_DB_PORT:-5432}:${FSTR_DB_PORT:-5432}"
 
 
   web:
-    build:
-      context: .
-      dockerfile: ./src/Dockerfile
+    build: .
+    restart: unless-stopped
     container_name: 'FSTR_API'
+    command: python manage.py runserver 0.0.0.0:8000
     environment:
-      DATABASE_URL: postgresql://postgres:changeme@postgres/FSTR
-    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
-    volumes:
-      - ./src/:/usr/src/app/
+      FSTR_DB_LOGIN: ${FSTR_DB_LOGIN:-postgres}
+      FSTR_DB_PASS: ${FSTR_DB_PASS:-changeme}
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       - postgres
 
