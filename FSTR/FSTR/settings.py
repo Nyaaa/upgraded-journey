@@ -83,10 +83,10 @@ WSGI_APPLICATION = 'FSTR.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('FSTR_DB_LOGIN'),
-        'USER': os.getenv('FSTR_DB_LOGIN'),
-        'PASSWORD': os.getenv('FSTR_DB_PASS'),
-        'HOST': os.getenv('FSTR_DB_HOST', 'host.docker.internal'),
+        'NAME': os.getenv('FSTR_DB_LOGIN', 'fstr'),
+        'USER': os.getenv('FSTR_DB_LOGIN', 'fstr'),
+        'PASSWORD': os.getenv('FSTR_DB_PASS', 'changeme'),
+        'HOST': os.getenv('FSTR_DB_HOST', 'localhost'),
         'PORT': os.getenv('FSTR_DB_PORT', '5432'),
     }
 }
@@ -110,6 +110,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'api.User'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -127,6 +129,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
