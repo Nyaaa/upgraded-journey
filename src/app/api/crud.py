@@ -33,8 +33,9 @@ def get_passages(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Passage).offset(skip).limit(limit).all()
 
 
-def create_passage(db: Session, passage: schemas.PassageCreate):
-    db_passage = models.Passage(**passage.dict(), add_time=datetime.utcnow(), status='new')
+def create_passage(db: Session, passage: schemas.PassageCreate, coords):
+    db_passage = models.Passage(**passage.dict(), add_time=datetime.utcnow(),
+                                status='new', coords_id=coords.id)
     db.add(db_passage)
     db.commit()
     db.refresh(db_passage)

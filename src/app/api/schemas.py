@@ -1,18 +1,30 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Literal
+import json
+
+
+class Validator(BaseModel):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_to_json
+
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
 
 
 class Image(BaseModel):
     title: str
-    passage_id: int
     filepath: str
 
     class Config:
         orm_mode = True
 
 
-class Coords(BaseModel):
+class Coords(Validator):
     latitude: float
     longitude: float
     height: int
@@ -30,10 +42,9 @@ class PassageBase(BaseModel):
     level_summer: str | None = None
     level_autumn: str | None = None
     level_spring: str | None = None
-    coords: Coords
 
 
-class PassageCreate(PassageBase):
+class PassageCreate(PassageBase, Validator):
     user_id: int
 
 
@@ -41,6 +52,8 @@ class Passage(PassageBase):
     id: int
     add_time: datetime
     status: Literal['new', 'pending', 'accepted', 'rejected']
+    coords: Coords
+    images: list[Image]
 
     class Config:
         orm_mode = True
