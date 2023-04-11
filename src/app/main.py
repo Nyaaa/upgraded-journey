@@ -4,8 +4,11 @@ from starlette.responses import RedirectResponse
 from .api import crud, models, schemas
 from .db import SessionLocal, engine
 import aiofiles
-from typing import List
+from typing import List, Optional
+from itertools import zip_longest
 from uuid import uuid4
+import os
+from datetime import date
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -48,8 +51,8 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/passages/", response_model=schemas.Passage)
-async def create_passage(title: List[str],
-                         file: List[UploadFile] = File(...),
+async def create_passage(image_title: Optional[List[str]],
+                         image_file: Optional[List[UploadFile]] = File(...),
                          passage: schemas.PassageCreate = Body(...),
                          coords: schemas.Coords = Body(...),
                          db: Session = Depends(get_db)):
@@ -57,19 +60,22 @@ async def create_passage(title: List[str],
     coords = crud.create_coords(db, coords)
     passage = crud.create_passage(db=db, passage=passage, coords=coords)
 
-    title = title[0].split(',')
-    files = list(zip(title, file))
-    to_save = []
+    if image_file:
+        image_title = image_title[0].split(',') or None
+        files = list(zip_longest(image_title, image_file, fillvalue=''))
+        to_save = []
 
-    for title, file in files:
-        file_path = "./media/" + file.filename
+        for image_title, image_file in files:
+            ext = image_file.filename.split('.')[-1].lower()
+            filename = f'{uuid4()}.{ext}'
+            file_path = os.path.join('./media', str(date.today()), filename)
 
-        async with aiofiles.open(file_path, 'wb') as out_file:
-            while content := await file.read(1024):
-                await out_file.write(content)
+            async with aiofiles.open(file_path, 'wb') as out_file:
+                while content := await image_file.read(1024):
+                    await out_file.write(content)
 
-        to_save.append(models.Image(title=title, passage_id=passage.id, filepath=file_path))
-    crud.create_image(db, to_save)
+            to_save.append(models.Image(title=image_title, passage_id=passage.id, filepath=file_path))
+        crud.create_image(db, to_save)
 
     return passage
 
