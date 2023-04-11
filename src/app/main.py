@@ -7,14 +7,13 @@ import aiofiles
 from typing import List, Optional
 from itertools import zip_longest
 from uuid import uuid4
-import os
+import pathlib
 from datetime import date
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
-# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -50,25 +49,28 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.post("/passages/", response_model=schemas.Passage)
-async def create_passage(image_title: Optional[List[str]],
-                         image_file: Optional[List[UploadFile]] = File(...),
-                         passage: schemas.PassageCreate = Body(...),
+@app.post("/submitData/", response_model=schemas.Passage)
+async def create_passage(image_title: Optional[List[str]] = None,
+                         image_file: Optional[List[UploadFile]] = File(None),
+                         passage: schemas.PassageCreate = Body(...),  # NOSONAR
                          coords: schemas.Coords = Body(...),
                          db: Session = Depends(get_db)):
+
     passage.user_id = read_user(user_id=passage.user_id, db=db).id
     coords = crud.create_coords(db, coords)
     passage = crud.create_passage(db=db, passage=passage, coords=coords)
 
     if image_file:
         image_title = image_title[0].split(',') or None
-        files = list(zip_longest(image_title, image_file, fillvalue=''))
+        files = list(zip_longest(image_title, image_file, fillvalue=None))
         to_save = []
 
         for image_title, image_file in files:
-            ext = image_file.filename.split('.')[-1].lower()
-            filename = f'{uuid4()}.{ext}'
-            file_path = os.path.join('./media', str(date.today()), filename)
+            path = pathlib.Path('./media') / str(date.today())
+            path.mkdir(parents=True, exist_ok=True)
+            ext = pathlib.Path(image_file.filename).suffix
+            filename = pathlib.Path(str(uuid4())).with_suffix(ext)
+            file_path = path.joinpath(filename).as_posix()
 
             async with aiofiles.open(file_path, 'wb') as out_file:
                 while content := await image_file.read(1024):

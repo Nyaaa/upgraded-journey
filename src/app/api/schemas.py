@@ -1,19 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Literal
-import json
-
-
-class Validator(BaseModel):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate_to_json
-
-    @classmethod
-    def validate_to_json(cls, value):
-        if isinstance(value, str):
-            return cls(**json.loads(value))
-        return value
+from .validators import PhoneNumber, JSONValidator
 
 
 class Image(BaseModel):
@@ -24,7 +12,7 @@ class Image(BaseModel):
         orm_mode = True
 
 
-class Coords(Validator):
+class Coords(JSONValidator):
     latitude: float
     longitude: float
     height: int
@@ -44,7 +32,7 @@ class PassageBase(BaseModel):
     level_spring: str | None = None
 
 
-class PassageCreate(PassageBase, Validator):
+class PassageCreate(PassageBase, JSONValidator):
     user_id: int
 
 
@@ -60,11 +48,11 @@ class Passage(PassageBase):
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
     first_name: str
     last_name: str
     middle_name: str
-    phone: str
+    phone: PhoneNumber
 
 
 class UserCreate(UserBase):
