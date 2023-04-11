@@ -22,11 +22,9 @@ class Image(Base):
     __tablename__ = "images"
 
     id = Column(Integer, primary_key=True, index=True)
-    blob = Column(LargeBinary)
+    filepath = Column(String)
     title = Column(String)
     passage_id = Column(Integer, ForeignKey("passages.id"))
-
-    passage = relationship("Passage", back_populates="images")
 
 
 class Coords(Base):
@@ -57,5 +55,5 @@ class Passage(Base):
     status = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
 
-    images = relationship("Image", back_populates="passage")
+    images = relationship("Image", backref="passages")
     user = relationship("User", back_populates="passages")

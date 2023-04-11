@@ -1,8 +1,10 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
 from .api import crud, models, schemas
 from .db import SessionLocal, engine
+import aiofiles
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -54,3 +56,25 @@ def create_passage(passage: schemas.PassageCreate, db: Session = Depends(get_db)
 @app.get("/passages/", response_model=list[schemas.Passage])
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_passages(db, skip=skip, limit=limit)
+
+
+@app.post("/upload-file", response_model=list[schemas.Image])
+async def create_upload_file(title: List[str],
+                             passage_id: int,
+                             file: List[UploadFile] = File(...),
+                             db: Session = Depends(get_db)):
+
+    title = title[0].split(',')
+    files = list(zip(title, file))
+    to_save = []
+
+    for title, file in files:
+        file_path = "./media/" + file.filename
+
+        async with aiofiles.open(file_path, 'wb') as out_file:
+            while content := await file.read(1024):
+                await out_file.write(content)
+
+        to_save.append(models.Image(title=title, passage_id=passage_id, filepath=file_path))
+    crud.create_image(db, to_save)
+    return to_save

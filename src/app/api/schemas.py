@@ -4,8 +4,12 @@ from typing import Literal
 
 
 class Image(BaseModel):
-    file: str
     title: str
+    passage_id: int
+    filepath: str
+
+    class Config:
+        orm_mode = True
 
 
 class Coords(BaseModel):

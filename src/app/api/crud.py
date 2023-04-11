@@ -47,3 +47,8 @@ def create_coords(db: Session, coords: schemas.Coords):
     db.commit()
     db.refresh(db_coords)
     return db_coords
+
+
+def create_image(db: Session, objects: list):
+    db.bulk_save_objects(objects)
+    db.commit()
