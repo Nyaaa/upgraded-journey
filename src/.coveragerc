@@ -1,0 +1,7 @@
+[run]
+source = .
+branch = True
+omit = tests/*
+
+[report]
+skip_covered = True

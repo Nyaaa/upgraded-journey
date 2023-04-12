@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
 from .validators import PhoneNumber, JSONValidator
 
@@ -51,8 +51,8 @@ class UserBase(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
-    middle_name: str
-    phone: PhoneNumber
+    middle_name: str | None = None
+    phone: PhoneNumber = Field(None, example='+711111111')
 
 
 class UserCreate(UserBase):

@@ -1,3 +1,5 @@
-` docker-compose up -d --build`
+API is set up for use with Docker.
 
-`docker-compose exec web pytest .`
+Build: ` docker-compose up -d --build`
+
+Run tests: `docker-compose exec web pytest --cov --cov-report=html`
