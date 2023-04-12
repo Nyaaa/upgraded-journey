@@ -1,15 +1,16 @@
 from typing import Any, Generator
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from app.api.models import User
 from app.db import Base
 from app.main import get_db, app
-from app.api.models import User
 
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_db.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///./db.sqlite3"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionTesting = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

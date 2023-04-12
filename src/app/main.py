@@ -1,14 +1,16 @@
+import pathlib
+from datetime import date
+from itertools import zip_longest
+from typing import List, Optional
+from uuid import uuid4
+
+import aiofiles
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile, Body
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
+
 from .api import crud, models, schemas
 from .db import SessionLocal, engine
-import aiofiles
-from typing import List, Optional
-from itertools import zip_longest
-from uuid import uuid4
-import pathlib
-from datetime import date
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -83,5 +85,5 @@ async def create_passage(image_title: Optional[List[str]] = None,
 
 
 @app.get("/passages/", response_model=list[schemas.Passage])
-def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_passages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_passages(db, skip=skip, limit=limit)

@@ -1,7 +1,9 @@
-from sqlalchemy.orm import Session
-from . import models, schemas
 from datetime import datetime
+
+from sqlalchemy.orm import Session
+
 from app import hasher
+from . import models, schemas
 
 
 def get_user(db: Session, user_id: int):
@@ -16,6 +18,13 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
+def commit(db: Session, instance):
+    db.add(instance)
+    db.commit()
+    db.refresh(instance)
+    return instance
+
+
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hasher.str_to_hash(user.password)
     db_user = models.User(email=user.email,
@@ -24,10 +33,7 @@ def create_user(db: Session, user: schemas.UserCreate):
                           middle_name=user.middle_name,
                           phone=user.phone,
                           hashed_password=hashed_password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    return commit(db, db_user)
 
 
 def get_passages(db: Session, skip: int = 0, limit: int = 100):
@@ -37,18 +43,12 @@ def get_passages(db: Session, skip: int = 0, limit: int = 100):
 def create_passage(db: Session, passage: schemas.PassageCreate, coords):
     db_passage = models.Passage(**passage.dict(), add_time=datetime.utcnow(),
                                 status='new', coords_id=coords.id)
-    db.add(db_passage)
-    db.commit()
-    db.refresh(db_passage)
-    return db_passage
+    return commit(db, db_passage)
 
 
 def create_coords(db: Session, coords: schemas.Coords):
     db_coords = models.Coords(**coords.dict())
-    db.add(db_coords)
-    db.commit()
-    db.refresh(db_coords)
-    return db_coords
+    return commit(db, db_coords)
 
 
 def create_image(db: Session, objects: list):
