@@ -1,13 +1,13 @@
+import pathlib
+from datetime import date
 from datetime import datetime
+from uuid import uuid4
 
+import aiofiles
 from sqlalchemy.orm import Session
 
 from app import hasher
 from . import models, schemas
-from uuid import uuid4
-import aiofiles
-import pathlib
-from datetime import date
 
 
 def get_user(db: Session, user_id: int):

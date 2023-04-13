@@ -1,6 +1,6 @@
 from app import hasher
 
-URL = '/users/'
+URL = '/v2/users/'
 
 
 def test_users_get_all(client, create_user):
@@ -58,10 +58,10 @@ def test_users_duplicate_email(client, create_user):
     }
     response = client.post(url=URL, json=user)
     assert response.status_code == 400
-    assert response.json() == {'detail': 'Email already registered'}
+    assert response.json()['message'] == 'Email already registered'
 
 
 def test_user_not_found(client):
     response = client.get(f'{URL}10')
     assert response.status_code == 404
-    assert response.json() == {'detail': 'User not found'}
+    assert response.json()['message'] == 'User not found'
