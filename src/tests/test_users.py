@@ -25,7 +25,7 @@ def test_users_post(client):
     }
     response = client.post(url=URL, json=user)
     assert response.status_code == 200
-    assert response.json()["email"] == "user@example.com"
+    assert response.json()["email"] == "user1@example.com"
     assert response.json()["is_active"] is True
     assert response.json()["phone"] == "+71111111"
 

@@ -27,7 +27,7 @@ def test_pass_get_all(client):
 
 
 def test_pass_post_no_image(client, create_user):
-    response = client.post(url="/submitData/", data=dict(passage=json.dumps(PASSAGE),
+    response = client.post(url="/passages/", data=dict(passage=json.dumps(PASSAGE),
                                                          coords=json.dumps(COORDS)))
     assert response.status_code == 200
     assert response.json()["id"] == 1
@@ -37,7 +37,7 @@ def test_pass_post_no_image(client, create_user):
 def test_pass_post_with_image(client, create_user):
     with patch("builtins.open", mock_open(read_data="data")):
         files = [('image_file', open("mock_file1", 'rb')), ('image_file', open("mock_file2", 'rb'))]
-    response = client.post(url="/submitData/",
+    response = client.post(url="/passages/",
                            data=dict(passage=json.dumps(PASSAGE),
                                      coords=json.dumps(COORDS),
                                      image_title='image_title1,image_title2',
