@@ -47,5 +47,7 @@ def test_pass_post_with_image(client, create_user):
     assert response.status_code == 200
     assert len(response.json()["images"]) == 2
 
-    for i in response.json()["images"]:
-        os.remove(i['filepath'])
+    for path in response.json()["images"]:
+        path = path['filepath']
+        assert os.path.isfile(path)
+        os.remove(path)
