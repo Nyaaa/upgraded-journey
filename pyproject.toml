@@ -16,7 +16,6 @@ aiofiles = "^23.1.0"
 pydantic = {extras = ["email"], version = "^1.10.7"}
 phonenumbers = "^8.13.9"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-fastapi-versionizer = "^0.1.4"
 
 
 [tool.poetry.group.dev.dependencies]

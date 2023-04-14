@@ -1,4 +1,5 @@
 from pydantic import EmailStr, Field
+
 from app.api.validators import PhoneNumber, JSONValidator
 
 

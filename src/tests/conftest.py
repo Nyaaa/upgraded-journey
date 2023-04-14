@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.api.models import User
+from app.api.v1.routes import v1_app
+from app.api.v2.routes import v2_app
 from app.db import Base, get_db
 from app.main import app
 
@@ -43,6 +45,11 @@ def client(test_app: FastAPI, db_session: SessionTesting
             pass
 
     test_app.dependency_overrides[get_db] = _get_test_db
+    # Main app dependency does not propagate to sub apps.
+    # Without supplying dependency sub app write to main DB.
+    v1_app.dependency_overrides[get_db] = _get_test_db
+    v2_app.dependency_overrides[get_db] = _get_test_db
+
     with TestClient(test_app) as client:
         yield client
 
