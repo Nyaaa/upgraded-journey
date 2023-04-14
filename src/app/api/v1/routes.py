@@ -7,7 +7,8 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi_versionizer.versionizer import api_version, api_version_remove
 from sqlalchemy.orm import Session
 
-from app.api import crud, models, schemas
+from app.api import crud, models
+from . import schemas
 from app.db import get_db
 
 router = APIRouter()
@@ -35,7 +36,7 @@ async def submit_data(image_title: List[str],
         crud.commit(db, user)
     coords = crud.create_coords(db, coords)
     db_passage = models.Passage(**passage.dict(), add_time=datetime.utcnow(),
-                                status='new', coords_id=coords.id, user_id=user)
+                                status='new', coords_id=coords.id, user_id=user.id)
     passage = crud.commit(db, db_passage)
 
     if image_file:
