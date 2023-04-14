@@ -1,11 +1,12 @@
-from app import main
+from app.db import get_db
 
 
 def test_health_check(client):
-    response = client.get("/")
-    assert response.status_code == 200
+    for index in ("/", "/v1/", "/v2/"):
+        response = client.get(index)
+        assert response.status_code == 200
 
 
 def test_db(client):
-    db = next(main.get_db())
+    db = next(get_db())
     assert db.bind.url.database == 'FSTR'

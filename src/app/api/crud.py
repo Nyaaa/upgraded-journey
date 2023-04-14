@@ -1,5 +1,9 @@
+import pathlib
+from datetime import date
 from datetime import datetime
+from uuid import uuid4
 
+import aiofiles
 from sqlalchemy.orm import Session
 
 from app import hasher
@@ -51,6 +55,24 @@ def create_coords(db: Session, coords: schemas.Coords):
     return commit(db, db_coords)
 
 
-def create_image(db: Session, objects: list):
-    db.bulk_save_objects(objects)
+async def create_image(db: Session, files: list, passage_id: int):
+    to_save = []
+
+    for image_title, image_file in files:
+        path = pathlib.Path('./media') / str(date.today())
+        path.mkdir(parents=True, exist_ok=True)
+        ext = pathlib.Path(image_file.filename).suffix
+        filename = pathlib.Path(str(uuid4())).with_suffix(ext)
+        file_path = path.joinpath(filename).as_posix()
+
+        await write_file(file_path, image_file)
+
+        to_save.append(models.Image(title=image_title, passage_id=passage_id, filepath=file_path))
+    db.bulk_save_objects(to_save)
     db.commit()
+
+
+async def write_file(file_path, image_file):
+    async with aiofiles.open(file_path, 'wb') as out_file:
+        while content := await image_file.read(1024):
+            await out_file.write(content)
