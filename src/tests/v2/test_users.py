@@ -67,11 +67,11 @@ async def test_users_duplicate_email(client, create_user):
     }
     response = await client.post(url=URL, json=user)
     assert response.status_code == 400
-    assert response.json()['message'] == 'Email already registered'
+    assert response.json()['detail'] == {'status': 400, 'message': 'Email already registered'}
 
 
 @pytest.mark.asyncio
 async def test_user_not_found(client):
     response = await client.get(f'{URL}10')
     assert response.status_code == 404
-    assert response.json()['message'] == 'User not found'
+    assert response.json()['detail'] == {'status': 404, 'message': 'User not found'}

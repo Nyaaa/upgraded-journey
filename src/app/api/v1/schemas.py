@@ -1,4 +1,7 @@
-from pydantic import EmailStr, Field
+from datetime import datetime
+from typing import Literal
+
+from pydantic import EmailStr, Field, BaseModel
 
 from app.api.validators import PhoneNumber, JSONValidator
 
@@ -12,6 +15,11 @@ class Coords(JSONValidator):
         orm_mode = True
 
 
+class Image(BaseModel):
+    title: str
+    filepath: str
+
+
 class PassageBase(JSONValidator):
     beauty_title: str
     title: str
@@ -21,6 +29,15 @@ class PassageBase(JSONValidator):
     level_summer: str | None = None
     level_autumn: str | None = None
     level_spring: str | None = None
+
+
+class Passage(PassageBase):
+    id: int
+    user_id: int
+    add_time: datetime
+    status: Literal['new', 'pending', 'accepted', 'rejected']
+    coords: Coords
+    images: list[Image]
 
 
 class UserBase(JSONValidator):

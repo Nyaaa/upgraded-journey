@@ -32,7 +32,7 @@ async def test_pass_get_all(client):
 @pytest.mark.asyncio
 async def test_pass_post_no_image(client, create_user):
     response = await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
-                                              coords=json.dumps(COORDS)))
+                                                    coords=json.dumps(COORDS)))
     assert response.status_code == 200
     assert response.json()["id"] == 1
     assert response.json()["status"] == "new"
@@ -43,12 +43,12 @@ async def test_pass_post_with_image(client, create_user):
     with patch("builtins.open", mock_open(read_data="data")):
         files = [('image_file', open("mock_file1", 'rb')), ('image_file', open("mock_file2", 'rb'))]
     response = await client.post(url=URL,
-                           data=dict(passage=json.dumps(PASSAGE),
-                                     coords=json.dumps(COORDS),
-                                     image_title='image_title1,image_title2',
-                                     ),
-                           files=files
-                           )
+                                 data=dict(passage=json.dumps(PASSAGE),
+                                           coords=json.dumps(COORDS),
+                                           image_title='image_title1,image_title2',
+                                           ),
+                                 files=files
+                                 )
     assert response.status_code == 200
     assert len(response.json()["images"]) == 2
 
@@ -56,3 +56,11 @@ async def test_pass_post_with_image(client, create_user):
         path = path['filepath']
         assert os.path.isfile(path)
         os.remove(path)
+
+
+@pytest.mark.asyncio
+async def test_passes_get_one(client, create_user):
+    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE), coords=json.dumps(COORDS)))
+    response = await client.get(f'{URL}1')
+    assert response.status_code == 200
+    assert response.json()['id'] == 1

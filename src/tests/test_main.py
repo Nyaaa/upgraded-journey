@@ -13,5 +13,6 @@ async def test_health_check(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_db(client: AsyncClient):
-    async for db in get_db():
-        assert db.bind.url.database == 'FSTR'
+    db = anext(get_db())  # NOSONAR
+    db = await db
+    assert db.bind.url.database == 'FSTR'

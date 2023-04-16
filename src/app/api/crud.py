@@ -4,39 +4,33 @@ from datetime import datetime
 from uuid import uuid4
 
 import aiofiles
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
 
 from app import hasher
 from . import models, schemas
 
 
-async def get_user(db: Session, user_id: int):
-    q = select(models.User).where(models.User.id == user_id)
+async def get_object_by_id(db: AsyncSession, model, obj_id: int):
+    q = select(model).where(model.id == obj_id)
     result = await db.execute(q)
     return result.scalars().first()
 
 
-async def get_user_by_email(db: Session, email: str):
+async def get_user_by_email(db: AsyncSession, email: str):
     q = select(models.User).where(models.User.email == email)
-    result = await db.execute(q)
-    return result.scalars().first()
-
-
-async def get_users(db: Session, skip: int = 0, limit: int = 100):
-    q = select(models.User).offset(skip).limit(limit)
     result = await db.execute(q)
     return result.scalars().all()
 
 
-async def commit(db: Session, instance):
+async def commit(db: AsyncSession, instance):
     db.add(instance)
     await db.commit()
     await db.refresh(instance)
     return instance
 
 
-async def create_user(db: Session, user: schemas.UserCreate):
+async def create_user(db: AsyncSession, user: schemas.UserCreate):
     hashed_password = hasher.str_to_hash(user.password)
     db_user = models.User(email=user.email,
                           first_name=user.first_name,
@@ -47,24 +41,24 @@ async def create_user(db: Session, user: schemas.UserCreate):
     return await commit(db, db_user)
 
 
-async def get_passages(db: Session, skip: int = 0, limit: int = 100):
-    q = select(models.Passage).offset(skip).limit(limit)
+async def get_all_objects(db: AsyncSession, model, skip: int = 0, limit: int = 100):
+    q = select(model).offset(skip).limit(limit)
     result = await db.execute(q)
     return result.scalars().all()
 
 
-def create_passage(db: Session, passage: schemas.PassageCreate, coords):
+def create_passage(db: AsyncSession, passage: schemas.PassageCreate, coords):
     db_passage = models.Passage(**passage.dict(), add_time=datetime.utcnow(),
                                 status='new', coords_id=coords.id)
     return commit(db, db_passage)
 
 
-def create_coords(db: Session, coords: schemas.Coords):
+def create_coords(db: AsyncSession, coords: schemas.Coords):
     db_coords = models.Coords(**coords.dict())
     return commit(db, db_coords)
 
 
-async def create_image(db: Session, files: list, passage_id: int):
+async def create_image(db: AsyncSession, files: list, passage_id: int):
     to_save = []
 
     for image_title, image_file in files:
@@ -81,3 +75,9 @@ async def create_image(db: Session, files: list, passage_id: int):
         to_save.append(models.Image(title=image_title, passage_id=passage_id, filepath=file_path))
     db.add_all(to_save)
     await db.commit()
+
+
+async def get_passage_by_email(db: AsyncSession, email: str):
+    q = select(models.Passage).join(models.User).where(models.User.email == email)
+    result = await db.execute(q)
+    return result.scalars().all()

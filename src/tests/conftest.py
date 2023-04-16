@@ -1,5 +1,5 @@
 import asyncio
-from typing import Generator
+from typing import Generator, AsyncGenerator
 
 import pytest
 import pytest_asyncio
@@ -37,10 +37,7 @@ def event_loop(request) -> Generator:
 @pytest_asyncio.fixture
 async def client(async_session):
     def _get_test_db():
-        try:
-            yield async_session
-        finally:
-            pass
+        yield async_session
 
     app.dependency_overrides[get_db] = _get_test_db
     # Main app dependency does not propagate to sub apps.
@@ -53,7 +50,7 @@ async def client(async_session):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def async_session() -> AsyncSession:
+async def async_session() -> AsyncGenerator[AsyncSession, None]:
     async with SessionTesting() as s:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

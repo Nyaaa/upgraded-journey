@@ -1,6 +1,8 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
+
+from pydantic import BaseModel, EmailStr, Field
+
 from .validators import PhoneNumber, JSONValidator
 
 
@@ -38,6 +40,7 @@ class PassageCreate(PassageBase, JSONValidator):
 
 class Passage(PassageBase):
     id: int
+    user_id: int
     add_time: datetime
     status: Literal['new', 'pending', 'accepted', 'rejected']
     coords: Coords
