@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Float
 from sqlalchemy.orm import relationship
+
 from app.db import Base
 
 
@@ -15,7 +16,7 @@ class User(Base):
     middle_name = Column(String)
     phone = Column(String)
 
-    passages = relationship("Passage", back_populates="user")
+    passages = relationship("Passage", back_populates="user", lazy="selectin")
 
 
 class Image(Base):
@@ -26,6 +27,8 @@ class Image(Base):
     title = Column(String)
     passage_id = Column(Integer, ForeignKey("passages.id"))
 
+    passage = relationship("Passage", back_populates="images", lazy="selectin")
+
 
 class Coords(Base):
     __tablename__ = "coords"
@@ -35,7 +38,7 @@ class Coords(Base):
     longitude = Column(Float)
     height = Column(Integer)
 
-    passage = relationship("Passage", backref="coords")
+    passage = relationship("Passage", back_populates="coords", lazy="selectin")
 
 
 class Passage(Base):
@@ -55,5 +58,6 @@ class Passage(Base):
     status = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
 
-    images = relationship("Image", backref="passages")
-    user = relationship("User", back_populates="passages")
+    images = relationship("Image", back_populates="passage", lazy="selectin")
+    coords = relationship("Coords", back_populates="passage", lazy="selectin")
+    user = relationship("User", back_populates="passages", lazy="selectin")

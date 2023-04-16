@@ -24,6 +24,12 @@ def test_app() -> Generator[FastAPI, Any, None]:
     Base.metadata.drop_all(engine)
 
 
+async def init_models():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+
 @pytest.fixture(scope="function")
 def db_session(test_app: FastAPI) -> Generator[SessionTesting, Any, None]:
     connection = engine.connect()

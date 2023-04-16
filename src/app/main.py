@@ -7,7 +7,6 @@ from .api.v1.routes import v1_app
 from .api.v2.routes import v2_app
 from .db import engine
 
-models.Base.metadata.create_all(bind=engine)
 tags_metadata = [
     {
         'name': 'v1',
@@ -33,3 +32,10 @@ app.mount("/v2", v2_app)
 @app.get('/', response_class=HTMLResponse, include_in_schema=False)
 def get_api_versions() -> HTMLResponse:
     return get_swagger_ui_html(openapi_url=app.openapi_url, title=app.title)
+
+
+@app.on_event("startup")
+async def init_tables():
+    async with engine.begin() as conn:
+        # await conn.run_sync(models.Base.metadata.drop_all)
+        await conn.run_sync(models.Base.metadata.create_all)
