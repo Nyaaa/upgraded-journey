@@ -5,7 +5,7 @@ from typing import List
 from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import RedirectResponse, JSONResponse
-from pydantic import create_model
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud, models
@@ -13,8 +13,6 @@ from app.db import get_db
 from . import schemas
 
 v1_app = FastAPI(version='1.1.0')
-query_params = {"user__email": (str, "user@example.com")}
-query_model = create_model("Query", **query_params)
 
 
 @v1_app.get("/", include_in_schema=False)
@@ -57,10 +55,36 @@ async def read_passage_by_id(passage_id: int, db: AsyncSession = Depends(get_db)
 
 
 @v1_app.get("/submitData/", response_model=schemas.Passage)
-async def read_passage_by_mail(params: query_model = Depends(), db: AsyncSession = Depends(get_db)):
-    params_as_dict = params.dict()
-    email = params_as_dict['user__email']
-    return await crud.get_passage_by_email(db, email=email)
+async def read_passages(user__email: EmailStr, db: AsyncSession = Depends(get_db)):
+    return await crud.get_passage_by_email(db, email=user__email)
+
+
+@v1_app.patch("/submitData/{passage_id}", response_model=schemas.Passage)
+async def update_passage(passage_id: int,
+                         image_title: List[str] = None,
+                         image_file: List[UploadFile] = File(None),
+                         passage: schemas.PassageUpdate = None,
+                         coords: schemas.CoordsUpdate = None,
+                         db: AsyncSession = Depends(get_db)):
+    db_passage = await read_passage_by_id(passage_id=passage_id, db=db)
+    if db_passage.status != 'new':
+        raise HTTPException(status_code=401, detail={'state': 0, 'message': 'Only new submissions can be edited'})
+    upd_passage = upd_coords = upd_image = None
+    if passage:
+        models.Passage(**passage.dict())  # force validation
+        upd_passage = await crud.update_instance(db, db_passage, passage)
+    if coords:
+        models.Coords(**coords.dict())  # force validation
+        upd_coords = await crud.update_instance(db, db_passage.coords, coords)
+    if image_file:
+        image_title = image_title[0].split(',') or None
+        files = list(zip_longest(image_title, image_file, fillvalue=None))
+        upd_image = await crud.create_image(db, files, passage_id)
+
+    if any([upd_passage, upd_coords, upd_image]):
+        return JSONResponse(status_code=200, content={'state': 1, 'message': None})
+    else:
+        raise HTTPException(status_code=400, detail={'state': 0, 'message': 'No data supplied'})
 
 
 @v1_app.exception_handler(RequestValidationError)
@@ -71,4 +95,3 @@ async def validation_exception_handler(request, exc):
 @v1_app.exception_handler(500)
 async def internal_exception_handler(request, exc):
     return JSONResponse(status_code=500, content={"status": 500, "message": "Internal Server Error", "id": None})
-
