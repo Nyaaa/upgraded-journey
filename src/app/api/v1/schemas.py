@@ -31,7 +31,13 @@ class PassageBase(JSONValidator):
     level_spring: str | None = None
 
 
-class PassageUpdate(JSONValidator):
+class CoordsUpdate(BaseModel):
+    latitude: Optional[float]
+    longitude: Optional[float]
+    height: Optional[int]
+
+
+class PassageUpdate(BaseModel):
     beauty_title: Optional[str]
     title: Optional[str]
     other_titles: Optional[str]
@@ -41,9 +47,6 @@ class PassageUpdate(JSONValidator):
     level_autumn: Optional[str]
     level_spring: Optional[str]
     status: Optional[Literal['new', 'pending', 'accepted', 'rejected']]
-
-    class Config:
-        orm_mode = True
 
 
 class Passage(PassageBase):

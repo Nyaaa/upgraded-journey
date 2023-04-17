@@ -62,9 +62,14 @@ async def read_passages(user__email: EmailStr = None, db: AsyncSession = Depends
 
 @v1_app.patch("/submitData/{passage_id}", response_model=schemas.Passage)
 async def update_passage(passage_id: int,
-                         passage: schemas.PassageUpdate,  # NOSONAR
+                         passage: schemas.PassageUpdate = None,
+                         coords: schemas.CoordsUpdate = None,
                          db: AsyncSession = Depends(get_db)):
     db_passage = await read_passage_by_id(passage_id=passage_id, db=db)
+    # for validation, couldn't find a better way to update using async connection
+    models.Passage(**passage.dict())
+    models.Coords(**coords.dict())
+
     passage = dict(passage).items()
     for key, value in passage:
         setattr(db_passage, key, value) if value else None
