@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import EmailStr, Field, BaseModel
 
@@ -29,6 +29,21 @@ class PassageBase(JSONValidator):
     level_summer: str | None = None
     level_autumn: str | None = None
     level_spring: str | None = None
+
+
+class PassageUpdate(JSONValidator):
+    beauty_title: Optional[str]
+    title: Optional[str]
+    other_titles: Optional[str]
+    connect: Optional[str]
+    level_winter: Optional[str]
+    level_summer: Optional[str]
+    level_autumn: Optional[str]
+    level_spring: Optional[str]
+    status: Optional[Literal['new', 'pending', 'accepted', 'rejected']]
+
+    class Config:
+        orm_mode = True
 
 
 class Passage(PassageBase):

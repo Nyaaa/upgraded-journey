@@ -78,6 +78,9 @@ async def create_image(db: AsyncSession, files: list, passage_id: int):
 
 
 async def get_passage_by_email(db: AsyncSession, email: str):
-    q = select(models.Passage).join(models.User).where(models.User.email == email)
+    if email:
+        q = select(models.Passage).join(models.User).where(models.User.email == email)
+    else:
+        q = select(models.Passage)
     result = await db.execute(q)
     return result.scalars().all()

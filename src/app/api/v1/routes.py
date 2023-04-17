@@ -3,9 +3,10 @@ from itertools import zip_longest
 from typing import List
 
 from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import RedirectResponse, JSONResponse
-from pydantic import create_model
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud, models
@@ -13,8 +14,6 @@ from app.db import get_db
 from . import schemas
 
 v1_app = FastAPI(version='1.1.0')
-query_params = {"user__email": (str, "user@example.com")}
-query_model = create_model("Query", **query_params)
 
 
 @v1_app.get("/", include_in_schema=False)
@@ -57,18 +56,26 @@ async def read_passage_by_id(passage_id: int, db: AsyncSession = Depends(get_db)
 
 
 @v1_app.get("/submitData/", response_model=schemas.Passage)
-async def read_passage_by_mail(params: query_model = Depends(), db: AsyncSession = Depends(get_db)):
-    params_as_dict = params.dict()
-    email = params_as_dict['user__email']
-    return await crud.get_passage_by_email(db, email=email)
+async def read_passages(user__email: EmailStr = None, db: AsyncSession = Depends(get_db)):
+    return await crud.get_passage_by_email(db, email=user__email)
 
 
-@v1_app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    return JSONResponse(status_code=400, content={"status": 400, "message": "Bad request", "id": None})
+@v1_app.patch("/submitData/{passage_id}", response_model=schemas.Passage)
+async def update_passage(passage_id: int,
+                         passage: schemas.PassageUpdate,  # NOSONAR
+                         db: AsyncSession = Depends(get_db)):
+    db_passage = await read_passage_by_id(passage_id=passage_id, db=db)
+    passage = dict(passage).items()
+    for key, value in passage:
+        setattr(db_passage, key, value) if value else None
+    return await crud.commit(db, db_passage)
 
 
-@v1_app.exception_handler(500)
-async def internal_exception_handler(request, exc):
-    return JSONResponse(status_code=500, content={"status": 500, "message": "Internal Server Error", "id": None})
-
+# @v1_app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(request, exc):
+#     return JSONResponse(status_code=400, content={"status": 400, "message": "Bad request", "id": None})
+#
+#
+# @v1_app.exception_handler(500)
+# async def internal_exception_handler(request, exc):
+#     return JSONResponse(status_code=500, content={"status": 500, "message": "Internal Server Error", "id": None})
