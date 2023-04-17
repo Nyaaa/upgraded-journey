@@ -1,9 +1,10 @@
 import pathlib
-from datetime import date
-from datetime import datetime
+from datetime import datetime, date
 from uuid import uuid4
 
 import aiofiles
+from pydantic import BaseModel
+from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -20,7 +21,7 @@ async def get_object_by_id(db: AsyncSession, model, obj_id: int):
 async def get_user_by_email(db: AsyncSession, email: str):
     q = select(models.User).where(models.User.email == email)
     result = await db.execute(q)
-    return result.scalars().all()
+    return result.scalars().first()
 
 
 async def commit(db: AsyncSession, instance):
@@ -75,11 +76,18 @@ async def create_image(db: AsyncSession, files: list, passage_id: int):
         to_save.append(models.Image(title=image_title, passage_id=passage_id, filepath=file_path))
     db.add_all(to_save)
     await db.commit()
+    return to_save
 
 
 async def get_passage_by_email(db: AsyncSession, email: str):
-    q = select(models.Passage)
-    if email:
-        q = q.join(models.User).where(models.User.email == email)
+    q = select(models.Passage).join(models.User).where(models.User.email == email)
     result = await db.execute(q)
     return result.scalars().all()
+
+
+async def update_instance(db: AsyncSession, instance: Row, data: BaseModel):
+    """Probably not a good way to update. Cannot use query due to async session."""
+    passage = dict(data).items()
+    for key, value in passage:
+        setattr(instance, key, value) if value else None
+    return await commit(db, instance)

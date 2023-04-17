@@ -5,6 +5,8 @@ from pydantic import EmailStr, Field, BaseModel
 
 from app.api.validators import PhoneNumber, JSONValidator
 
+OPTIONS = Literal['new', 'pending', 'accepted', 'rejected']
+
 
 class Coords(JSONValidator):
     latitude: float
@@ -31,13 +33,13 @@ class PassageBase(JSONValidator):
     level_spring: str | None = None
 
 
-class CoordsUpdate(BaseModel):
+class CoordsUpdate(JSONValidator):
     latitude: Optional[float]
     longitude: Optional[float]
     height: Optional[int]
 
 
-class PassageUpdate(BaseModel):
+class PassageUpdate(JSONValidator):
     beauty_title: Optional[str]
     title: Optional[str]
     other_titles: Optional[str]
@@ -46,14 +48,14 @@ class PassageUpdate(BaseModel):
     level_summer: Optional[str]
     level_autumn: Optional[str]
     level_spring: Optional[str]
-    status: Optional[Literal['new', 'pending', 'accepted', 'rejected']]
+    status: Optional[OPTIONS]
 
 
 class Passage(PassageBase):
     id: int
     user_id: int
     add_time: datetime
-    status: Literal['new', 'pending', 'accepted', 'rejected']
+    status: OPTIONS
     coords: Coords
     images: list[Image]
 
