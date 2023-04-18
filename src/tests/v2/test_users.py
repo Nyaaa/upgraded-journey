@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient
 
 from app import hasher
+from tests.sample_data import USER2, USER
 
 URL = '/v2/users/'
 
@@ -22,29 +23,17 @@ async def test_users_get_one(client, create_user):
 
 @pytest.mark.asyncio
 async def test_users_post(client):
-    user = {
-        "email": "user1@example.com",
-        "first_name": "string",
-        "last_name": "string",
-        "phone": "+7 111 11 11",
-        "password": "string"
-    }
+    user = USER2 | {"password": "string", "phone": "+7 111 11 11"}
     response = await client.post(url=URL, json=user)
     assert response.status_code == 200
-    assert response.json()["email"] == "user1@example.com"
+    assert response.json()["email"] == USER2['email']
     assert response.json()["is_active"] is True
     assert response.json()["phone"] == "+71111111"
 
 
 @pytest.mark.asyncio
 async def test_users_wrong_phone(client):
-    user = {
-        "email": "user@example.com",
-        "first_name": "string",
-        "last_name": "string",
-        "phone": "111",
-        "password": "string"
-    }
+    user = USER2 | {"password": "string", "phone": "111"}
     response = await client.post(url=URL, json=user)
     assert response.status_code == 422
     assert response.json()["detail"][0]["msg"] == "Invalid phone number format"
@@ -59,12 +48,7 @@ async def test_hash(client):
 
 @pytest.mark.asyncio
 async def test_users_duplicate_email(client, create_user):
-    user = {
-        "email": "test@example.com",
-        "first_name": "string",
-        "last_name": "string",
-        "password": "string"
-    }
+    user = USER | {"password": "string"}
     response = await client.post(url=URL, json=user)
     assert response.status_code == 400
     assert response.json()['detail'] == {'status': 400, 'message': 'Email already registered'}

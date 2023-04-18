@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import Generator, AsyncGenerator
 
 import pytest
@@ -6,25 +7,35 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.future import select
 
-from app.api.models import User
+from app.api.models import User, Image
 from app.api.v1.routes import v1_app
 from app.api.v2.routes import v2_app
 from app.db import Base, get_db
 from app.main import app
+from tests.sample_data import USER
 
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./db.sqlite3"
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionTesting = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 async def create_user(async_session):
-    user = User(email='test@example.com',
-                first_name='first_name',
-                last_name='last_name')
+    user = User(**USER)
     async_session.add(user)
     await async_session.commit()
+
+
+@pytest.fixture
+async def cleanup(async_session):
+    yield None
+    q = select(Image)
+    result = await async_session.execute(q)
+    img = result.scalars().all()
+    for i in img:
+        os.remove(i.filepath)
 
 
 @pytest.fixture(scope="session")
