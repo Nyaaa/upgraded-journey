@@ -1,8 +1,13 @@
 import json
 import os
+from io import BytesIO
 
 import pytest
+from fastapi import HTTPException, UploadFile
+
 from tests.sample_data import USER2, PASSAGE, COORDS, FILES
+from app.api.v1.routes import update_passage
+from app.api.v1.schemas import PassageUpdate, CoordsUpdate
 
 URL = '/v1/submitData/'
 
@@ -67,14 +72,36 @@ async def test_pass_patch(client, cleanup):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch_forbidden(client):
+async def test_pass_patch_status(client, async_session):
     await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
                                          coords=json.dumps(COORDS),
                                          user=json.dumps(USER2),
                                          )
                       )
-    await client.patch(url=f'{URL}1', data=dict(passage=json.dumps({"status": "accepted"}), passage_id=1))
-    update = await client.patch(url=f'{URL}1', data=dict(passage=json.dumps({"status": "pending"}), passage_id=1))
+    _bin = BytesIO('test'.encode('utf-8'))
+    new_status = await update_passage(passage_id=1,
+                                      passage=PassageUpdate(status='accepted'),
+                                      image_file=None,
+                                      db=async_session)
+    assert new_status.status_code == 200
 
-    assert update.status_code == 401
-    assert update.json()['detail'] == {'state': 0, 'message': 'Only new submissions can be edited'}
+    with pytest.raises(HTTPException) as err:
+        await update_passage(passage_id=1, passage=PassageUpdate(status='pending'), db=async_session)
+    assert err.value.status_code == 401
+    assert err.value.detail == {'state': 0, 'message': 'Only new submissions can be edited'}
+
+
+@pytest.mark.asyncio
+async def test_pass_patch(client, async_session, cleanup):
+    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
+                                         coords=json.dumps(COORDS),
+                                         user=json.dumps(USER2),
+                                         )
+                      )
+    _bin = BytesIO('test'.encode('utf-8'))
+    new_status = await update_passage(passage_id=1,
+                                      image_title=['image_title1'],
+                                      image_file=[UploadFile(file=_bin, filename='test')],
+                                      coords=CoordsUpdate(),
+                                      db=async_session)
+    assert new_status.status_code == 200

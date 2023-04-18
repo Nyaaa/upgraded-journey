@@ -31,8 +31,7 @@ async def create_user(async_session):
 @pytest.fixture
 async def cleanup(async_session):
     yield None
-    q = select(Image)
-    result = await async_session.execute(q)
+    result = await async_session.execute(select(Image))
     img = result.scalars().all()
     for i in img:
         os.remove(i.filepath)
