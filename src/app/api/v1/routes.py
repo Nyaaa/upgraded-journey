@@ -38,7 +38,7 @@ async def submit_data(image_title: List[str],
                                 status='new', coords_id=coords.id, user_id=user.id)
     passage = await crud.commit(db, db_passage)
 
-    if image_file:
+    if image_file and isinstance(image_file, list):
         image_title = image_title[0].split(',') or None
         files = list(zip_longest(image_title, image_file, fillvalue=None))
         await crud.create_image(db, files, passage.id)
@@ -76,8 +76,8 @@ async def update_passage(passage_id: int,
     if coords:
         models.Coords(**coords.dict())  # force validation
         upd_coords = await crud.update_instance(db, db_passage.coords, coords)
-    if image_file:
-        image_title = image_title[0].split(',') or None
+    if image_file and isinstance(image_file, list):
+        image_title = image_title[0].split(',') if image_title else ''
         files = list(zip_longest(image_title, image_file, fillvalue=None))
         upd_image = await crud.create_image(db, files, passage_id)
 

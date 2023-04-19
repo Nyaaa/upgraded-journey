@@ -9,9 +9,10 @@ URL = '/v2/passages/'
 
 
 @pytest.mark.asyncio
-async def test_pass_get_all(client):
+async def test_pass_get_all(client, create_passage):
     response = await client.get(URL)
     assert response.status_code == 200
+    assert len(response.json()) == 1
 
 
 @pytest.mark.asyncio
@@ -40,9 +41,7 @@ async def test_pass_post_with_image(client, create_user, cleanup):
 
 
 @pytest.mark.asyncio
-async def test_passes_get_one(client, create_user):
-    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE_WITH_USER),
-                                         coords=json.dumps(COORDS)))
+async def test_passes_get_one(client, create_passage):
     response = await client.get(f'{URL}1')
     assert response.status_code == 200
     assert response.json()['id'] == 1

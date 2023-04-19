@@ -58,7 +58,7 @@ async def create_passage(image_title: Optional[List[str]] = None,
     coords = await crud.create_coords(db, coords)
     passage = await crud.create_passage(db=db, passage=passage, coords=coords)
 
-    if image_file:
+    if image_file and isinstance(image_file, list):
         image_title = image_title[0].split(',') or None
         files = list(zip_longest(image_title, image_file, fillvalue=None))
         await crud.create_image(db, files, passage.id)

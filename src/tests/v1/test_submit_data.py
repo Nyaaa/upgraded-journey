@@ -32,21 +32,15 @@ async def test_pass_post_with_image(client, cleanup):
 
 
 @pytest.mark.asyncio
-async def test_passes_get_one(client):
-    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
-                                         coords=json.dumps(COORDS),
-                                         user=json.dumps(USER2)))
+async def test_passes_get_one(create_passage, client):
     response = await client.get(f'{URL}1')
     assert response.status_code == 200
     assert response.json()['id'] == 1
 
 
 @pytest.mark.asyncio
-async def test_passes_get_by_email(client):
-    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
-                                         coords=json.dumps(COORDS),
-                                         user=json.dumps(USER2)))
-    response = await client.get(f'{URL}?user__email=user2%40example.com')
+async def test_passes_get_by_email(create_passage, client):
+    response = await client.get(f'{URL}?user__email=test%40example.com')
     assert response.status_code == 200
     assert len(response.json()) == 1
 
@@ -69,19 +63,14 @@ async def test_pass_patch(client, cleanup):
 
     assert update.status_code == 200
     assert update.json() == {'state': 1, 'message': None}
+    assert len(update.json()['images']) == 4
 
 
 @pytest.mark.asyncio
-async def test_pass_patch_status(client, async_session):
-    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
-                                         coords=json.dumps(COORDS),
-                                         user=json.dumps(USER2),
-                                         )
-                      )
+async def test_pass_patch_status(create_passage, async_session):
     _bin = BytesIO('test'.encode('utf-8'))
     new_status = await update_passage(passage_id=1,
                                       passage=PassageUpdate(status='accepted'),
-                                      image_file=None,
                                       db=async_session)
     assert new_status.status_code == 200
 
@@ -92,12 +81,7 @@ async def test_pass_patch_status(client, async_session):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch(client, async_session, cleanup):
-    await client.post(url=URL, data=dict(passage=json.dumps(PASSAGE),
-                                         coords=json.dumps(COORDS),
-                                         user=json.dumps(USER2),
-                                         )
-                      )
+async def test_pass_patch(create_passage, async_session, cleanup):
     _bin = BytesIO('test'.encode('utf-8'))
     new_status = await update_passage(passage_id=1,
                                       image_title=['image_title1'],
@@ -105,3 +89,11 @@ async def test_pass_patch(client, async_session, cleanup):
                                       coords=CoordsUpdate(),
                                       db=async_session)
     assert new_status.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_pass_patch_invalid(async_session, create_passage):
+    with pytest.raises(HTTPException) as err:
+        await update_passage(passage_id=1, db=async_session)
+    assert err.value.status_code == 400
+    assert err.value.detail == {'state': 0, 'message': 'No data supplied'}

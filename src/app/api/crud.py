@@ -48,7 +48,7 @@ async def get_all_objects(db: AsyncSession, model, skip: int = 0, limit: int = 1
     return result.scalars().all()
 
 
-def create_passage(db: AsyncSession, passage: schemas.PassageCreate, coords):
+def create_passage(db: AsyncSession, passage: schemas.PassageCreate, coords: models.Coords):
     db_passage = models.Passage(**passage.dict(), add_time=datetime.utcnow(),
                                 status='new', coords_id=coords.id)
     return commit(db, db_passage)
