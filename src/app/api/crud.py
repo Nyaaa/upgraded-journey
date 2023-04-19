@@ -3,6 +3,7 @@ from datetime import datetime, date
 from uuid import uuid4
 
 import aiofiles
+import tempfile
 from pydantic import BaseModel
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,11 +64,14 @@ async def create_image(db: AsyncSession, files: list, passage_id: int):
     to_save = []
 
     for image_title, image_file in files:
-        path = pathlib.Path('./media') / str(date.today())
-        path.mkdir(parents=True, exist_ok=True)
-        ext = pathlib.Path(image_file.filename).suffix
-        filename = pathlib.Path(str(uuid4())).with_suffix(ext)
-        file_path = path.joinpath(filename).as_posix()
+        if str(db.bind.url) == "sqlite+aiosqlite://":
+            file_path = tempfile.NamedTemporaryFile().name
+        else:
+            path = pathlib.Path('./media') / str(date.today())
+            path.mkdir(parents=True, exist_ok=True)
+            ext = pathlib.Path(image_file.filename).suffix
+            filename = pathlib.Path(str(uuid4())).with_suffix(ext)
+            file_path = path.joinpath(filename).as_posix()
 
         async with aiofiles.open(file_path, 'wb') as out_file:
             while content := await image_file.read(1024):

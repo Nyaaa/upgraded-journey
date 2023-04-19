@@ -13,7 +13,7 @@ URL = '/v1/submitData/'
 
 
 @pytest.mark.asyncio
-async def test_pass_post_with_image(client, cleanup):
+async def test_pass_post_with_image(client):
     response = await client.post(url=URL, files=FILES,
                                  data=dict(passage=json.dumps(PASSAGE),
                                            coords=json.dumps(COORDS),
@@ -46,7 +46,7 @@ async def test_passes_get_by_email(create_passage, client):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch(client, cleanup):
+async def test_pass_patch(client):
     await client.post(url=URL, files=FILES, data=dict(passage=json.dumps(PASSAGE),
                                                       coords=json.dumps(COORDS),
                                                       user=json.dumps(USER2),
@@ -81,7 +81,7 @@ async def test_pass_patch_status(create_passage, async_session):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch(create_passage, async_session, cleanup):
+async def test_pass_patch(create_passage, async_session):
     _bin = BytesIO('test'.encode('utf-8'))
     new_status = await update_passage(passage_id=1,
                                       image_title=['image_title1'],

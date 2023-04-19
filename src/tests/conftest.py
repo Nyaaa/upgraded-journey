@@ -1,24 +1,22 @@
-import asyncio
 import os
-from typing import Generator, AsyncGenerator
+from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.future import select
 
+from app.api import crud, models, schemas
 from app.api.v1.routes import v1_app
 from app.api.v2.routes import v2_app
 from app.db import Base, get_db
 from app.main import app
-from app.api import crud, models, schemas
 from tests.sample_data import USER, COORDS, PASSAGE_WITH_USER
 
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./db.sqlite3"
+SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite://"
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionTesting = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+SessionTesting = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest.fixture
@@ -37,24 +35,8 @@ async def create_passage(async_session, create_user):
     return passage
 
 
-@pytest.fixture
-async def cleanup(async_session):
-    yield None
-    result = await async_session.execute(select(models.Image))
-    img = result.scalars().all()
-    for i in img:
-        os.remove(i.filepath)
-
-
-@pytest.fixture(scope="session")
-def event_loop(request) -> Generator:
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
 @pytest_asyncio.fixture
-async def client(async_session):
+async def client(async_session) -> AsyncGenerator[AsyncClient, None]:
     def _get_test_db():
         yield async_session
 

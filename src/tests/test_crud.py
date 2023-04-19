@@ -49,7 +49,7 @@ async def test_get_passage_by_email(async_session, create_user):
 
 
 @pytest.mark.asyncio
-async def test_write_file(async_session, cleanup):
+async def test_write_file(async_session):
     _bin = BytesIO('test'.encode('utf-8'))
     files = [('image_title1', UploadFile(file=_bin, filename='test'))]
     saved = await crud.create_image(async_session, files, 1)

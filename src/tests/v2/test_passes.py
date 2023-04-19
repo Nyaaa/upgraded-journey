@@ -25,7 +25,7 @@ async def test_pass_post_no_image(client, create_user):
 
 
 @pytest.mark.asyncio
-async def test_pass_post_with_image(client, create_user, cleanup):
+async def test_pass_post_with_image(client, create_user):
     response = await client.post(url=URL, files=FILES,
                                  data=dict(passage=json.dumps(PASSAGE_WITH_USER),
                                            coords=json.dumps(COORDS),
