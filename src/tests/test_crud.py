@@ -1,7 +1,8 @@
-import pytest
-from fastapi import UploadFile
 import os
 from io import BytesIO
+
+import pytest
+from fastapi import UploadFile
 
 from app.api import crud
 from app.api import models
@@ -60,4 +61,13 @@ async def test_write_file(async_session):
     assert isinstance(saved[0], models.Image)
 
 
+@pytest.mark.asyncio
+async def test_write_file_to_hdd(async_session):
+    _bin = BytesIO('test'.encode('utf-8'))
+    files = [('image_title1', UploadFile(file=_bin, filename='test'))]
+    saved = await crud.create_image(async_session, files, 1)
 
+    path = saved[0].filepath
+    assert os.path.isfile(path)
+    assert isinstance(saved, list)
+    assert isinstance(saved[0], models.Image)

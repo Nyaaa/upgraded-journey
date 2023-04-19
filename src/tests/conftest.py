@@ -1,11 +1,9 @@
-import os
 from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.future import select
 
 from app.api import crud, models, schemas
 from app.api.v1.routes import v1_app

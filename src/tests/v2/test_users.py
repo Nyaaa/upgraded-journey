@@ -1,7 +1,10 @@
 import pytest
+from fastapi import HTTPException
 from httpx import AsyncClient
 
 from app import hasher
+from app.api import schemas
+from app.api.v2 import routes
 from tests.sample_data import USER2, USER
 
 URL = '/v2/users/'
@@ -15,20 +18,18 @@ async def test_users_get_all(client: AsyncClient, create_user):
 
 
 @pytest.mark.asyncio
-async def test_users_get_one(client, create_user):
-    response = await client.get(f'{URL}1')
-    assert response.status_code == 200
-    assert response.json()['id'] == 1
+async def test_users_get_one(async_session, create_user):
+    user = await routes.read_user_by_id(user_id=1, db=async_session)
+    assert user.id == 1
 
 
 @pytest.mark.asyncio
-async def test_users_post(client):
-    user = USER2 | {"password": "string", "phone": "+7 111 11 11"}
-    response = await client.post(url=URL, json=user)
-    assert response.status_code == 200
-    assert response.json()["email"] == USER2['email']
-    assert response.json()["is_active"] is True
-    assert response.json()["phone"] == "+71111111"
+async def test_users_post(async_session):
+    user = schemas.UserCreate(**USER2 | {"password": "string", "phone": "+7 111 11 11"})
+    response = await routes.create_user(db=async_session, user=user)
+    assert response.email == USER2['email']
+    assert response.is_active is True
+    assert response.phone == "+71111111"
 
 
 @pytest.mark.asyncio
@@ -47,15 +48,17 @@ async def test_hash(client):
 
 
 @pytest.mark.asyncio
-async def test_users_duplicate_email(client, create_user):
-    user = USER | {"password": "string"}
-    response = await client.post(url=URL, json=user)
-    assert response.status_code == 400
-    assert response.json()['detail'] == {'status': 400, 'message': 'Email already registered'}
+async def test_users_duplicate_email(async_session, create_user):
+    user = schemas.UserCreate(**USER | {"password": "string"})
+    with pytest.raises(HTTPException) as err:
+        await routes.create_user(db=async_session, user=user)
+    assert err.value.status_code == 400
+    assert err.value.detail == {'status': 400, 'message': 'Email already registered'}
 
 
 @pytest.mark.asyncio
-async def test_user_not_found(client):
-    response = await client.get(f'{URL}10')
-    assert response.status_code == 404
-    assert response.json()['detail'] == {'status': 404, 'message': 'User not found'}
+async def test_user_not_found(async_session):
+    with pytest.raises(HTTPException) as err:
+        await routes.read_user_by_id(db=async_session, user_id=10)
+    assert err.value.status_code == 404
+    assert err.value.detail == {'status': 404, 'message': 'User not found'}

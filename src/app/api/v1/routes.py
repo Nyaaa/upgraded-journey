@@ -38,10 +38,9 @@ async def submit_data(image_title: List[str],
                                 status='new', coords_id=coords.id, user_id=user.id)
     passage = await crud.commit(db, db_passage)
 
-    if image_file and isinstance(image_file, list):
-        image_title = image_title[0].split(',') or None
-        files = list(zip_longest(image_title, image_file, fillvalue=None))
-        await crud.create_image(db, files, passage.id)
+    image_title = image_title[0].split(',') or None
+    files = list(zip_longest(image_title, image_file, fillvalue=None))
+    await crud.create_image(db, files, passage.id)
 
     return JSONResponse(status_code=200, content={'status': 200, 'message': None, 'id': passage.id})
 
