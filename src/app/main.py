@@ -5,18 +5,18 @@ from fastapi.responses import HTMLResponse
 from .api import models
 from .api.v1.routes import v1_app
 from .api.v2.routes import v2_app
-from .db import engine
+from .db import engine, settings
 
 tags_metadata = [
     {
         "name": "v1",
         "description": "API version 1",
-        "externalDocs": {"url": "http://127.0.0.1:8000/v1/docs"},
+        "externalDocs": {"url": f"{settings.SERVER_HOST}/v1/docs"},
     },
     {
         "name": "v2",
         "description": "API version 2",
-        "externalDocs": {"url": "http://127.0.0.1:8000/v2/docs"},
+        "externalDocs": {"url": f"{settings.SERVER_HOST}/v2/docs"},
     },
 ]
 app = FastAPI(root_path="", openapi_tags=tags_metadata)

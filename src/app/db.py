@@ -6,6 +6,7 @@ from sqlalchemy.orm import declarative_base
 
 
 class Settings:
+    SERVER_HOST: str = os.getenv("SERVER_HOST", "http://127.0.0.1:8000")
     POSTGRES_USER: str = os.getenv("FSTR_DB_LOGIN", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("FSTR_DB_PASS", "changeme")
     POSTGRES_SERVER: str = os.getenv("FSTR_DB_HOST", "postgres")
