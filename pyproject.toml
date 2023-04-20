@@ -6,7 +6,7 @@ authors = ["Nyaaa <1457047+Nyaaa@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 uvicorn = "^0.21.1"
 fastapi = "^0.95.0"
 sqlalchemy = "^2.0.9"
