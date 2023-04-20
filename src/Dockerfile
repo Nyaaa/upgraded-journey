@@ -7,3 +7,4 @@ COPY poetry.lock pyproject.toml /usr/src/app/
 RUN poetry install -n --no-root --no-cache
 
 COPY ./src/app /usr/src/app/
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
