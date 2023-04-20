@@ -13,19 +13,21 @@ from app.main import app
 from tests.sample_data import USER, COORDS, PASSAGE_WITH_USER
 
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite://"
-engine = create_async_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 SessionTesting = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest.fixture
-async def create_user(async_session):
+async def create_user(async_session: AsyncSession) -> None:
     user = models.User(**USER)
     async_session.add(user)
     await async_session.commit()
 
 
 @pytest.fixture
-async def create_passage(async_session, create_user):
+async def create_passage(async_session: AsyncSession, create_user) -> models.Passage:
     crd = schemas.Coords(**COORDS)
     coords = await crud.create_coords(async_session, crd)
     pas = schemas.PassageCreate(**PASSAGE_WITH_USER)
@@ -34,7 +36,7 @@ async def create_passage(async_session, create_user):
 
 
 @pytest_asyncio.fixture
-async def client(async_session) -> AsyncGenerator[AsyncClient, None]:
+async def client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     def _get_test_db():
         yield async_session
 
@@ -44,8 +46,8 @@ async def client(async_session) -> AsyncGenerator[AsyncClient, None]:
     v1_app.dependency_overrides[get_db] = _get_test_db
     v2_app.dependency_overrides[get_db] = _get_test_db
 
-    async with AsyncClient(app=app, base_url="http://127.0.0.1:8000/") as client:
-        yield client
+    async with AsyncClient(app=app, base_url="http://127.0.0.1:8000/") as _client:
+        yield _client
 
 
 @pytest_asyncio.fixture(scope="function")

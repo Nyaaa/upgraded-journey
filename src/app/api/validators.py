@@ -1,7 +1,8 @@
-import phonenumbers
-from pydantic.validators import strict_str_validator
-from pydantic import BaseModel
 import json
+
+import phonenumbers
+from pydantic import BaseModel
+from pydantic.validators import strict_str_validator
 
 
 class PhoneNumber(str):
@@ -12,12 +13,12 @@ class PhoneNumber(str):
 
     @classmethod
     def validate(cls, v: str):
-        v = v.strip().replace(' ', '')
+        v = v.strip().replace(" ", "")
 
         try:
             pn = phonenumbers.parse(v)
         except phonenumbers.phonenumberutil.NumberParseException:
-            raise ValueError('Invalid phone number format')
+            raise ValueError("Invalid phone number format")
 
         return cls(phonenumbers.format_number(pn, phonenumbers.PhoneNumberFormat.E164))
 

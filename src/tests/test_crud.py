@@ -26,8 +26,8 @@ async def test_get_all_obj(async_session, create_user):
 
 @pytest.mark.asyncio
 async def test_get_user_by_email(async_session, create_user):
-    result = await crud.get_user_by_email(async_session, USER['email'])
-    assert result.email == USER['email']
+    result = await crud.get_user_by_email(async_session, USER["email"])
+    assert result.email == USER["email"]
 
 
 @pytest.mark.asyncio
@@ -42,32 +42,27 @@ async def test_get_passage_by_email(async_session, create_user):
     passage = models.Passage(**PASSAGE_WITH_USER)
     async_session.add(passage)
     await async_session.commit()
-    result = await crud.get_passage_by_email(async_session, USER['email'])
+    result = await crud.get_passage_by_email(async_session, USER["email"])
     assert isinstance(result, list)
     assert len(result) == 1
     assert isinstance(result[0], models.Passage)
-    assert result[0].user.email == USER['email']
-
-
-@pytest.mark.asyncio
-async def test_write_file(async_session):
-    _bin = BytesIO('test'.encode('utf-8'))
-    files = [('image_title1', UploadFile(file=_bin, filename='test'))]
-    saved = await crud.create_image(async_session, files, 1)
-
-    path = saved[0].filepath
-    assert os.path.isfile(path)
-    assert isinstance(saved, list)
-    assert isinstance(saved[0], models.Image)
+    assert result[0].user.email == USER["email"]
 
 
 @pytest.mark.asyncio
 async def test_write_file_to_hdd(async_session):
-    _bin = BytesIO('test'.encode('utf-8'))
-    files = [('image_title1', UploadFile(file=_bin, filename='test'))]
+    orig_db_url = async_session.bind.url
+    async_session.bind.url = 'test'
+    _bin = BytesIO("test".encode("utf-8"))
+    files = [("image_title1", UploadFile(file=_bin, filename="test"))]
     saved = await crud.create_image(async_session, files, 1)
+    async_session.bind.url = orig_db_url
 
     path = saved[0].filepath
     assert os.path.isfile(path)
     assert isinstance(saved, list)
     assert isinstance(saved[0], models.Image)
+    os.remove(path)
+    parent = os.path.dirname(path)
+    if len(os.listdir(parent)) == 0:
+        os.rmdir(parent)

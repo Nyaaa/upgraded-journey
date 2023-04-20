@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
 
-from app.db import get_db
+from app.db import get_db, settings
 
 
 @pytest.mark.asyncio
@@ -15,4 +15,4 @@ async def test_health_check(client: AsyncClient):
 async def test_db():
     db = anext(get_db())  # NOSONAR
     db = await db
-    assert db.bind.url.database == 'FSTR'
+    assert db.bind.url.database == settings.POSTGRES_DB
