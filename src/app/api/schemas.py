@@ -42,7 +42,7 @@ class Passage(PassageBase):
     id: int
     user_id: int
     add_time: datetime
-    status: Literal['new', 'pending', 'accepted', 'rejected']
+    status: Literal["new", "pending", "accepted", "rejected"]
     coords: Coords
     images: list[Image]
 
@@ -55,7 +55,7 @@ class UserBase(BaseModel):
     first_name: str
     last_name: str
     middle_name: str | None = None
-    phone: PhoneNumber = Field(None, example='+711111111')
+    phone: PhoneNumber = Field(None, example="+711111111")
 
 
 class UserCreate(UserBase):

@@ -5,7 +5,7 @@ from pydantic import EmailStr, Field, BaseModel
 
 from app.api.validators import PhoneNumber, JSONValidator
 
-OPTIONS = Literal['new', 'pending', 'accepted', 'rejected']
+OPTIONS = Literal["new", "pending", "accepted", "rejected"]
 
 
 class Coords(JSONValidator):
@@ -65,4 +65,4 @@ class UserBase(JSONValidator):
     first_name: str
     last_name: str
     middle_name: str | None = None
-    phone: PhoneNumber = Field(None, example='+711111111')
+    phone: PhoneNumber = Field(None, example="+711111111")
