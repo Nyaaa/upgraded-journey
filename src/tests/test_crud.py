@@ -6,7 +6,7 @@ from fastapi import UploadFile
 
 from app.api import crud
 from app.api import models
-from tests.sample_data import USER2, PASSAGE_WITH_USER, USER
+from tests.sample_data import USER2, USER
 
 
 @pytest.mark.asyncio
@@ -38,15 +38,12 @@ async def test_commit(async_session):
 
 
 @pytest.mark.asyncio
-async def test_get_passage_by_email(async_session, create_user):
-    passage = models.Passage(**PASSAGE_WITH_USER)
-    async_session.add(passage)
-    await async_session.commit()
+async def test_get_passage_by_email(async_session, create_passage):
     result = await crud.get_passage_by_email(async_session, USER["email"])
     assert isinstance(result, list)
     assert len(result) == 1
     assert isinstance(result[0], models.Passage)
-    assert result[0].user.email == USER["email"]
+    assert result[0].user_id == 1
 
 
 @pytest.mark.asyncio

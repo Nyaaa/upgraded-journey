@@ -50,7 +50,7 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate) -> models.User
 async def get_all_objects(db: AsyncSession, model, skip: int = 0, limit: int = 100):
     q = select(model).offset(skip).limit(limit)
     result = await db.execute(q)
-    return result.scalars().all()
+    return result.scalars().unique().all()
 
 
 async def create_passage(
@@ -97,7 +97,7 @@ async def create_image(
 async def get_passage_by_email(db: AsyncSession, email: str) -> Sequence[models.Passage]:
     q = select(models.Passage).join(models.User).where(models.User.email == email)
     result = await db.execute(q)
-    return result.scalars().all()
+    return result.scalars().unique().all()
 
 
 async def update_instance(db: AsyncSession, instance: Row, data: BaseModel):
