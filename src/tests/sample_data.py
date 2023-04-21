@@ -17,10 +17,6 @@ PASSAGE = {
     "title": "string",
     "other_titles": "string",
     "connect": "string",
-    "level_winter": "string",
-    "level_summer": "string",
-    "level_autumn": "string",
-    "level_spring": "string",
 }
 PASSAGE_WITH_USER = PASSAGE | {"user_id": 1}
 COORDS = {"latitude": 0, "longitude": 0, "height": 0}

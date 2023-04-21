@@ -54,7 +54,7 @@ async def submit_data(
     )
 
 
-@v1_app.get("/submitData/{passage_id}", response_model=schemas.Passage)
+@v1_app.get("/submitData/{passage_id}", response_model=schemas.Passage, response_model_exclude={'user'})
 async def read_passage_by_id(passage_id: int, db: AsyncSession = Depends(get_db)) -> models.Passage:
     db_passage = await crud.get_object_by_id(
         db, model=models.Passage, obj_id=passage_id
@@ -66,7 +66,7 @@ async def read_passage_by_id(passage_id: int, db: AsyncSession = Depends(get_db)
     return db_passage
 
 
-@v1_app.get("/submitData/", response_model=schemas.Passage)
+@v1_app.get("/submitData/", response_model=schemas.Passage, response_model_exclude={'user'})
 async def read_passages(user__email: EmailStr, db: AsyncSession = Depends(get_db)):
     return await crud.get_passage_by_email(db, email=user__email)
 
