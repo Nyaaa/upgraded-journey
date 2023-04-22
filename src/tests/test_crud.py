@@ -49,7 +49,7 @@ async def test_get_passage_by_email(async_session, create_passage):
 @pytest.mark.asyncio
 async def test_write_file_to_hdd(async_session):
     orig_db_url = async_session.bind.url
-    async_session.bind.url = 'test'
+    async_session.bind.url = "test"
     _bin = BytesIO("test".encode("utf-8"))
     files = [("image_title1", UploadFile(file=_bin, filename="test"))]
     saved = await crud.create_image(async_session, files, 1)

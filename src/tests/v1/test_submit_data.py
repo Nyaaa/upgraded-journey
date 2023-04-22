@@ -3,6 +3,8 @@ import os
 
 import pytest
 from fastapi import HTTPException, UploadFile
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud, models
 from app.api.v1.routes import update_passage, read_passage_by_id, submit_data
@@ -19,7 +21,7 @@ URL = "/v1/submitData/"
 
 
 @pytest.mark.asyncio
-async def test_pass_post_with_image(client):
+async def test_pass_post_with_image(client: AsyncClient):
     response = await client.post(
         url=URL,
         files=FILES,
@@ -28,7 +30,7 @@ async def test_pass_post_with_image(client):
             coords=json.dumps(COORDS),
             user=json.dumps(USER2),
             image_title="image_title1,image_title2",
-            ),
+        ),
     )
     assert response.status_code == 200
     assert response.json()["id"] == 1
@@ -41,14 +43,14 @@ async def test_pass_post_with_image(client):
 
 
 @pytest.mark.asyncio
-async def test_passes_get_one(create_passage, client):
+async def test_passes_get_one(create_passage: models.Passage, client: AsyncClient):
     response = await client.get(f"{URL}1")
     assert response.status_code == 200
     assert response.json()["id"] == 1
 
 
 @pytest.mark.asyncio
-async def test_passes_404(async_session):
+async def test_passes_404(async_session: AsyncSession):
     with pytest.raises(HTTPException) as err:
         await read_passage_by_id(1, async_session)
     assert err.value.status_code == 404
@@ -56,14 +58,14 @@ async def test_passes_404(async_session):
 
 
 @pytest.mark.asyncio
-async def test_passes_get_by_email(create_passage, client):
+async def test_passes_get_by_email(create_passage: models.Passage, client: AsyncClient):
     response = await client.get(f"{URL}?user__email=test%40example.com")
     assert response.status_code == 200
     assert len(response.json()) == 1
 
 
 @pytest.mark.asyncio
-async def test_pass_patch(client):
+async def test_pass_patch(client: AsyncClient):
     await client.post(
         url=URL,
         files=FILES,
@@ -91,7 +93,9 @@ async def test_pass_patch(client):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch_status(create_passage, async_session):
+async def test_pass_patch_status(
+    create_passage: models.Passage, async_session: AsyncSession
+):
     new_status = await update_passage(
         passage_id=1, passage=PassageUpdate(status="accepted"), db=async_session
     )
@@ -109,7 +113,7 @@ async def test_pass_patch_status(create_passage, async_session):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch(create_passage, async_session):
+async def test_pass_patch(create_passage: models.Passage, async_session: AsyncSession):
     new_status = await update_passage(
         passage_id=1,
         image_title=["image_title1"],
@@ -121,7 +125,9 @@ async def test_pass_patch(create_passage, async_session):
 
 
 @pytest.mark.asyncio
-async def test_pass_patch_invalid(async_session, create_passage):
+async def test_pass_patch_invalid(
+    async_session: AsyncSession, create_passage: models.Passage
+):
     with pytest.raises(HTTPException) as err:
         await update_passage(passage_id=1, db=async_session)
     assert err.value.status_code == 400
@@ -129,7 +135,7 @@ async def test_pass_patch_invalid(async_session, create_passage):
 
 
 @pytest.mark.asyncio
-async def test_submit_data_new_user(async_session):
+async def test_submit_data_new_user(async_session: AsyncSession):
     user = await crud.get_all_objects(async_session, models.User)
     assert len(user) == 0
     await submit_data(
@@ -144,7 +150,9 @@ async def test_submit_data_new_user(async_session):
     assert len(user) == 1
 
 
-async def test_submit_data_existing_user(async_session, create_user):
+async def test_submit_data_existing_user(
+    async_session: AsyncSession, create_user: models.User
+):
     user = await crud.get_all_objects(async_session, models.User)
     assert len(user) == 1
     await submit_data(
@@ -160,7 +168,7 @@ async def test_submit_data_existing_user(async_session, create_user):
 
 
 @pytest.mark.asyncio
-async def test_pass_post_400(client):
+async def test_pass_post_400(client: AsyncClient):
     response = await client.post(
         url=URL,
         data=dict(

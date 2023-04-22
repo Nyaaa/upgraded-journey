@@ -23,7 +23,7 @@ class Coords(JSONValidator):
         orm_mode = True
 
 
-class PassageBase(BaseModel):
+class PassageBase(JSONValidator):
     beauty_title: str
     title: str
     other_titles: Optional[str]
@@ -32,10 +32,6 @@ class PassageBase(BaseModel):
     level_summer: Optional[str]
     level_autumn: Optional[str]
     level_spring: Optional[str]
-
-
-class PassageCreate(PassageBase, JSONValidator):
-    user_id: int
 
 
 class Passage(PassageBase):

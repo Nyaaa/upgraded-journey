@@ -1,10 +1,11 @@
 from itertools import zip_longest
 from typing import List, Optional
 
-from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException
+from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import app.auth
 from app.api import crud, schemas, models
 from app.db import get_db
 
@@ -31,13 +32,21 @@ async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_d
     db_user = await crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(
-            status_code=400,
-            detail={"status": 400, "message": "Email already registered"},
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "status": status.HTTP_400_BAD_REQUEST,
+                "message": "Email already registered",
+            },
         )
     return await crud.create_user(db=db, user=user)
 
 
-@v2_app.get("/users/", response_model=list[schemas.User], tags=["Users"])
+@v2_app.get(
+    "/users/",
+    response_model=list[schemas.User],
+    tags=["Users"],
+    response_model_exclude={"passages"},
+)
 async def read_all_users(
     skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
 ):
@@ -49,7 +58,8 @@ async def read_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
     db_user = await crud.get_object_by_id(db, model=models.User, obj_id=user_id)
     if db_user is None:
         raise HTTPException(
-            status_code=404, detail={"status": 404, "message": "User not found"}
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"status": status.HTTP_404_NOT_FOUND, "message": "User not found"},
         )
     return db_user
 
@@ -58,14 +68,15 @@ async def read_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
 async def create_passage(
     image_title: Optional[List[str]] = None,
     image_file: Optional[List[UploadFile]] = File(None),
-    passage: schemas.PassageCreate = Body(...),  # NOSONAR
+    passage: schemas.PassageBase = Body(...),  # NOSONAR
     coords: schemas.Coords = Body(...),
     db: AsyncSession = Depends(get_db),
+    user: models.User = Depends(app.auth.get_current_user),
 ):
-    user = await read_user_by_id(user_id=passage.user_id, db=db)
-    passage.user_id = user.id
     coords = await crud.create_coords(db, coords)
-    passage = await crud.create_passage(db=db, passage=passage, coords=coords)
+    passage = await crud.create_passage(
+        db=db, passage=passage, coords=coords, user=user
+    )
 
     if image_file and isinstance(image_file, list):
         image_title = image_title[0].split(",") or None
@@ -90,6 +101,10 @@ async def read_passage_by_id(passage_id: int, db: AsyncSession = Depends(get_db)
     )
     if db_passage is None:
         raise HTTPException(
-            status_code=404, detail={"status": 404, "message": "Passage not found"}
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "status": status.HTTP_404_NOT_FOUND,
+                "message": "Passage not found",
+            },
         )
     return db_passage
