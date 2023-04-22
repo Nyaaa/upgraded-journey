@@ -50,14 +50,21 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate) -> models.User
 async def get_all_objects(db: AsyncSession, model, skip: int = 0, limit: int = 100):
     q = select(model).offset(skip).limit(limit)
     result = await db.execute(q)
-    return result.scalars().all()
+    return result.scalars().unique().all()
 
 
 async def create_passage(
-    db: AsyncSession, passage: schemas.PassageCreate, coords: models.Coords
+    db: AsyncSession,
+    passage: schemas.PassageBase,
+    coords: models.Coords,
+    user: models.User,
 ) -> models.Passage:
     db_passage = models.Passage(
-        **passage.dict(), add_time=datetime.utcnow(), status="new", coords_id=coords.id
+        **passage.dict(),
+        add_time=datetime.utcnow(),
+        status="new",
+        coords_id=coords.id,
+        user_id=user.id,
     )
     return await commit(db, db_passage)
 
@@ -68,7 +75,7 @@ async def create_coords(db: AsyncSession, coords: schemas.Coords) -> models.Coor
 
 
 async def create_image(
-        db: AsyncSession, files: list[tuple[str, UploadFile]], passage_id: int
+    db: AsyncSession, files: list[tuple[str, UploadFile]], passage_id: int
 ) -> list[models.Image]:
     to_save = []
 
@@ -94,10 +101,12 @@ async def create_image(
     return to_save
 
 
-async def get_passage_by_email(db: AsyncSession, email: str) -> Sequence[models.Passage]:
+async def get_passage_by_email(
+    db: AsyncSession, email: str
+) -> Sequence[models.Passage]:
     q = select(models.Passage).join(models.User).where(models.User.email == email)
     result = await db.execute(q)
-    return result.scalars().all()
+    return result.scalars().unique().all()
 
 
 async def update_instance(db: AsyncSession, instance: Row, data: BaseModel):

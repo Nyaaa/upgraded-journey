@@ -4,6 +4,7 @@ USER = {
     "email": "test@example.com",
     "first_name": "first_name",
     "last_name": "last_name",
+    "hashed_password": "$2b$12$Sy/AU..XdUWwlzuCWTNWAOdF2s8k2FvrB6G/Cw69lNNUxpyfoP6sa",
 }
 USER2 = {
     "email": "user2@example.com",
@@ -17,10 +18,5 @@ PASSAGE = {
     "title": "string",
     "other_titles": "string",
     "connect": "string",
-    "level_winter": "string",
-    "level_summer": "string",
-    "level_autumn": "string",
-    "level_spring": "string",
 }
-PASSAGE_WITH_USER = PASSAGE | {"user_id": 1}
 COORDS = {"latitude": 0, "longitude": 0, "height": 0}

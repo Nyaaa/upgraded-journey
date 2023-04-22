@@ -27,7 +27,7 @@ class Image(Base):
     title = Column(String)
     passage_id = Column(Integer, ForeignKey("passages.id"))
 
-    passage = relationship("Passage", back_populates="images", lazy="selectin")
+    passage = relationship("Passage", back_populates="images")
 
 
 class Coords(Base):
@@ -38,7 +38,7 @@ class Coords(Base):
     longitude = Column(Float)
     height = Column(Integer)
 
-    passage = relationship("Passage", back_populates="coords", lazy="selectin")
+    passage = relationship("Passage", back_populates="coords")
 
 
 class Passage(Base):
@@ -58,6 +58,6 @@ class Passage(Base):
     status = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
 
-    images = relationship("Image", back_populates="passage", lazy="selectin")
-    coords = relationship("Coords", back_populates="passage", lazy="selectin")
-    user = relationship("User", back_populates="passages", lazy="selectin")
+    images = relationship("Image", back_populates="passage", lazy="joined")
+    coords = relationship("Coords", back_populates="passage", lazy="joined")
+    user = relationship("User", back_populates="passages", lazy="noload")

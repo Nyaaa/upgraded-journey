@@ -1,8 +1,7 @@
-from datetime import datetime
 from itertools import zip_longest
 from typing import List
 
-from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException
+from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import EmailStr
@@ -36,37 +35,45 @@ async def submit_data(
         user = models.User(**user.dict(), hashed_password="test")
         await crud.commit(db, user)
     coords = await crud.create_coords(db, coords)
-    db_passage = models.Passage(
-        **passage.dict(),
-        add_time=datetime.utcnow(),
-        status="new",
-        coords_id=coords.id,
-        user_id=user.id
+    passage = await crud.create_passage(
+        db=db, passage=passage, coords=coords, user=user
     )
-    passage = await crud.commit(db, db_passage)
 
     image_title = image_title[0].split(",") or None
     files = list(zip_longest(image_title, image_file, fillvalue=None))
     await crud.create_image(db, files, passage.id)
 
     return JSONResponse(
-        status_code=200, content={"status": 200, "message": None, "id": passage.id}
+        status_code=status.HTTP_200_OK,
+        content={"status": status.HTTP_200_OK, "message": None, "id": passage.id},
     )
 
 
-@v1_app.get("/submitData/{passage_id}", response_model=schemas.Passage)
-async def read_passage_by_id(passage_id: int, db: AsyncSession = Depends(get_db)) -> models.Passage:
+@v1_app.get(
+    "/submitData/{passage_id}",
+    response_model=schemas.Passage,
+    response_model_exclude={"user"},
+)
+async def read_passage_by_id(
+    passage_id: int, db: AsyncSession = Depends(get_db)
+) -> models.Passage:
     db_passage = await crud.get_object_by_id(
         db, model=models.Passage, obj_id=passage_id
     )
     if db_passage is None:
         raise HTTPException(
-            status_code=404, detail={"status": 404, "message": "Passage not found"}
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "status": status.HTTP_404_NOT_FOUND,
+                "message": "Passage not found",
+            },
         )
     return db_passage
 
 
-@v1_app.get("/submitData/", response_model=schemas.Passage)
+@v1_app.get(
+    "/submitData/", response_model=schemas.Passage, response_model_exclude={"user"}
+)
 async def read_passages(user__email: EmailStr, db: AsyncSession = Depends(get_db)):
     return await crud.get_passage_by_email(db, email=user__email)
 
@@ -83,7 +90,7 @@ async def update_passage(
     db_passage = await read_passage_by_id(passage_id=passage_id, db=db)
     if db_passage.status != "new":
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"state": 0, "message": "Only new submissions can be edited"},
         )
     upd_passage = upd_coords = upd_image = None
@@ -99,23 +106,35 @@ async def update_passage(
         upd_image = await crud.create_image(db, files, passage_id)
 
     if any([upd_passage, upd_coords, upd_image]):
-        return JSONResponse(status_code=200, content={"state": 1, "message": None})
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, content={"state": 1, "message": None}
+        )
     else:
         raise HTTPException(
-            status_code=400, detail={"state": 0, "message": "No data supplied"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"state": 0, "message": "No data supplied"},
         )
 
 
 @v1_app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     return JSONResponse(
-        status_code=400, content={"status": 400, "message": "Bad request", "id": None}
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "status": status.HTTP_400_BAD_REQUEST,
+            "message": "Bad request",
+            "id": None,
+        },
     )
 
 
 @v1_app.exception_handler(500)
 async def internal_exception_handler(request, exc):
     return JSONResponse(
-        status_code=500,
-        content={"status": 500, "message": "Internal Server Error", "id": None},
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "message": "Internal Server Error",
+            "id": None,
+        },
     )

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -23,19 +23,15 @@ class Coords(JSONValidator):
         orm_mode = True
 
 
-class PassageBase(BaseModel):
+class PassageBase(JSONValidator):
     beauty_title: str
     title: str
-    other_titles: str | None = None
-    connect: str | None = None
-    level_winter: str | None = None
-    level_summer: str | None = None
-    level_autumn: str | None = None
-    level_spring: str | None = None
-
-
-class PassageCreate(PassageBase, JSONValidator):
-    user_id: int
+    other_titles: Optional[str]
+    connect: Optional[str]
+    level_winter: Optional[str]
+    level_summer: Optional[str]
+    level_autumn: Optional[str]
+    level_spring: Optional[str]
 
 
 class Passage(PassageBase):
@@ -54,7 +50,7 @@ class UserBase(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
-    middle_name: str | None = None
+    middle_name: Optional[str]
     phone: PhoneNumber = Field(None, example="+711111111")
 
 
