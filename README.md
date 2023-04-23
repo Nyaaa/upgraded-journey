@@ -18,9 +18,3 @@ Run tests: `docker-compose exec web pytest --cov --cov-report=html`
 ### ERD
 
 ![ERD](docs/ERD_1.png)
-
-### Deployment test
-
-https://upgraded-journey-production.up.railway.app/ 
-
-Example request: `https://upgraded-journey-production.up.railway.app/v2/passages/?skip=0&limit=100`
