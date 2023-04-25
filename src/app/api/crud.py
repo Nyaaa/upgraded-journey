@@ -11,7 +11,6 @@ from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app import hasher
 from . import models, schemas
 
 
@@ -32,19 +31,6 @@ async def commit(db: AsyncSession, instance):
     await db.commit()
     await db.refresh(instance)
     return instance
-
-
-async def create_user(db: AsyncSession, user: schemas.UserCreate) -> models.User:
-    hashed_password = hasher.str_to_hash(user.password)
-    db_user = models.User(
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        middle_name=user.middle_name,
-        phone=user.phone,
-        hashed_password=hashed_password,
-    )
-    return await commit(db, db_user)
 
 
 async def get_all_objects(db: AsyncSession, model, skip: int = 0, limit: int = 100):

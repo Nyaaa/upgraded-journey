@@ -13,7 +13,7 @@ Run tests: `docker-compose exec web pytest --cov --cov-report=html`
 ### Features:
 * Async FastAPI endpoints
 * Async SQLAlchemy connection using asyncpg for main DB connection and aiosqlite for testing. 
-* Basic authentication using Passlib
+* OAuth2 + JWT authentication
 
 ### ERD
 
