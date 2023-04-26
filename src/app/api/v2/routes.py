@@ -1,11 +1,13 @@
+from datetime import timedelta
 from itertools import zip_longest
 from typing import List, Optional
 
 from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import app.auth
+from app import auth
 from app.api import crud, schemas, models
 from app.db import get_db
 
@@ -38,7 +40,10 @@ async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_d
                 "message": "Email already registered",
             },
         )
-    return await crud.create_user(db=db, user=user)
+    user_dict = user.dict()
+    hashed_password = auth.str_to_hash(user_dict.pop("password"))
+    user = models.User(**user_dict | {"hashed_password": hashed_password})
+    return await crud.commit(db=db, instance=user)
 
 
 @v2_app.get(
@@ -64,14 +69,40 @@ async def read_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
     return db_user
 
 
+@v2_app.post("/token", response_model=schemas.Token, tags=["Users"])
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await auth.authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=auth.Settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@v2_app.get("/users/me/", response_model=schemas.User, tags=["Users"])
+async def read_users_me(
+    current_user: models.User = Depends(auth.get_current_active_user),
+):
+    return current_user
+
+
 @v2_app.post("/passages/", response_model=schemas.Passage, tags=["Passes"])
 async def create_passage(
+    user: models.User = Depends(auth.get_current_active_user),
     image_title: Optional[List[str]] = None,
     image_file: Optional[List[UploadFile]] = File(None),
     passage: schemas.PassageBase = Body(...),  # NOSONAR
     coords: schemas.Coords = Body(...),
     db: AsyncSession = Depends(get_db),
-    user: models.User = Depends(app.auth.get_current_user),
 ):
     coords = await crud.create_coords(db, coords)
     passage = await crud.create_passage(
