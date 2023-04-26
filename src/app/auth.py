@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timedelta
-from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -30,7 +29,7 @@ class Settings:
 
 
 async def authenticate_user(
-    username: str, password: str, db: AsyncSession = Depends(get_db)
+    username: str, password: str, db: AsyncSession
 ) -> bool | models.User:
     user = await crud.get_user_by_email(db, email=username)
     if not user:
@@ -41,7 +40,7 @@ async def authenticate_user(
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)], db: AsyncSession = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ) -> models.User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -65,7 +64,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: Annotated[models.User, Depends(get_current_user)]
+    current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")

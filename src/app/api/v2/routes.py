@@ -1,6 +1,6 @@
 from datetime import timedelta
 from itertools import zip_longest
-from typing import List, Optional, Annotated
+from typing import List, Optional
 
 from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
@@ -70,8 +70,11 @@ async def read_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @v2_app.post("/token", response_model=schemas.Token, tags=["Users"])
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = await auth.authenticate_user(form_data.username, form_data.password)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await auth.authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,14 +90,14 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 @v2_app.get("/users/me/", response_model=schemas.User, tags=["Users"])
 async def read_users_me(
-    current_user: Annotated[models.User, Depends(auth.get_current_active_user)]
+    current_user: models.User = Depends(auth.get_current_active_user),
 ):
     return current_user
 
 
 @v2_app.post("/passages/", response_model=schemas.Passage, tags=["Passes"])
 async def create_passage(
-    user: Annotated[models.User, Depends(auth.get_current_active_user)],
+    user: models.User = Depends(auth.get_current_active_user),
     image_title: Optional[List[str]] = None,
     image_file: Optional[List[UploadFile]] = File(None),
     passage: schemas.PassageBase = Body(...),  # NOSONAR

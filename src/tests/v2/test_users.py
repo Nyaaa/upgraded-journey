@@ -1,5 +1,6 @@
 import pytest
 from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,3 +58,33 @@ async def test_user_not_found(async_session: AsyncSession):
         await routes.read_user_by_id(db=async_session, user_id=10)
     assert err.value.status_code == 404
     assert err.value.detail == {"status": 404, "message": "User not found"}
+
+
+@pytest.mark.asyncio
+async def test_login(create_user: models.User, async_session: AsyncSession):
+    form = OAuth2PasswordRequestForm(
+        username=create_user.email, password="string", scope=""
+    )
+    token = await routes.login(form, async_session)
+    assert token
+    return token
+
+
+@pytest.mark.asyncio
+async def test_login_failed(async_session: AsyncSession):
+    form = OAuth2PasswordRequestForm(username="", password="", scope="")
+    with pytest.raises(HTTPException) as err:
+        await routes.login(form, async_session)
+    assert err.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_restricted_access(
+    client: AsyncClient, create_user: models.User, async_session: AsyncSession
+):
+    token = await test_login(create_user, async_session)
+    key = token["access_token"]
+    response = await client.get(
+        url=f"{URL}me/", headers={"Authorization": f"Bearer {key}"}
+    )
+    assert response.status_code == 200
