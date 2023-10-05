@@ -23,5 +23,5 @@ jobs:
         run: poetry install
       - name: Test with pytest
         run: |
-          cd src
-          poetry run pytest --cov --cov-report=html
+          cd app
+          poetry run pytest --cov

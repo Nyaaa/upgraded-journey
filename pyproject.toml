@@ -19,6 +19,7 @@ asyncpg = "^0.28.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 pydantic-settings = "^2.0.3"
 pydantic-extra-types = "^2.1.0"
+alembic = "^1.12.0"
 
 
 [tool.poetry.group.dev.dependencies]
