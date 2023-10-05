@@ -22,4 +22,4 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Test with pytest
-        run: pytest --cov
+        run: poetry run pytest --cov
