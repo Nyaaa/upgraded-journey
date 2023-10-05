@@ -5,7 +5,8 @@ from fastapi.responses import HTMLResponse
 from .api import models
 from .api.v1.routes import v1_app
 from .api.v2.routes import v2_app
-from .db import engine, settings
+from .settings import settings
+from app.api.crud import engine
 
 tags_metadata = [
     {

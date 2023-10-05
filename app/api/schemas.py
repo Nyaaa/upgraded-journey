@@ -2,36 +2,31 @@ from datetime import datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
+from pydantic_extra_types.phone_numbers import PhoneNumber
 
-from .validators import PhoneNumber, JSONValidator
+from .validators import JSONValidatorMixin
 
 
 class Image(BaseModel):
     title: str
     filepath: str
 
-    class Config:
-        orm_mode = True
 
-
-class Coords(JSONValidator):
+class Coords(BaseModel, JSONValidatorMixin):
     latitude: float
     longitude: float
     height: int
 
-    class Config:
-        orm_mode = True
 
-
-class PassageBase(JSONValidator):
+class PassageBase(BaseModel, JSONValidatorMixin):
     beauty_title: str
     title: str
-    other_titles: Optional[str]
-    connect: Optional[str]
-    level_winter: Optional[str]
-    level_summer: Optional[str]
-    level_autumn: Optional[str]
-    level_spring: Optional[str]
+    other_titles: Optional[str] = None
+    connect: Optional[str] = None
+    level_winter: Optional[str] = None
+    level_summer: Optional[str] = None
+    level_autumn: Optional[str] = None
+    level_spring: Optional[str] = None
 
 
 class Passage(PassageBase):
@@ -42,16 +37,13 @@ class Passage(PassageBase):
     coords: Coords
     images: list[Image]
 
-    class Config:
-        orm_mode = True
-
 
 class UserBase(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
-    middle_name: Optional[str]
-    phone: PhoneNumber = Field(None, example="+711111111")
+    middle_name: Optional[str] = None
+    phone: Optional[PhoneNumber] = Field(None, json_schema_extra={"example": "+1-206-555-01-00"})
 
 
 class UserCreate(UserBase):
@@ -63,9 +55,6 @@ class User(UserBase):
     is_active: bool
     passages: list[Passage] = []
 
-    class Config:
-        orm_mode = True
-
 
 class Token(BaseModel):
     access_token: str
@@ -73,4 +62,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str]
+    username: Optional[str] = None

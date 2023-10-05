@@ -1,10 +1,10 @@
-FROM python:3.11.0-alpine
+FROM python:3.11-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 RUN pip install poetry && poetry config virtualenvs.create false
-COPY poetry.lock pyproject.toml /usr/src/app/
+COPY poetry.lock pyproject.toml /app/
 RUN poetry install -n --no-root --no-cache
 
-COPY ./src/app /usr/src/app/
+COPY ./app /app/
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

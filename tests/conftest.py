@@ -4,7 +4,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from app import db, main
+from app import main
 from app.api import crud, models, schemas
 from app.api.v1.routes import v1_app
 from app.api.v2.routes import v2_app
@@ -44,11 +44,11 @@ async def client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, Non
     def _get_test_db():
         yield async_session
 
-    main.app.dependency_overrides[db.get_db] = _get_test_db
+    main.app.dependency_overrides[crud.get_db] = _get_test_db
     # Main app dependency does not propagate to sub apps.
     # Without supplying dependency sub apps write to main DB.
-    v1_app.dependency_overrides[db.get_db] = _get_test_db
-    v2_app.dependency_overrides[db.get_db] = _get_test_db
+    v1_app.dependency_overrides[crud.get_db] = _get_test_db
+    v2_app.dependency_overrides[crud.get_db] = _get_test_db
 
     async with AsyncClient(app=main.app, base_url="http://127.0.0.1:8000/") as _client:
         yield _client
@@ -58,7 +58,7 @@ async def client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, Non
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
     async with SessionTesting() as s:
         async with engine.begin() as conn:
-            await conn.run_sync(db.Base.metadata.create_all)
+            await conn.run_sync(models.Base.metadata.create_all)
             yield s
-            await conn.run_sync(db.Base.metadata.drop_all)
+            await conn.run_sync(models.Base.metadata.drop_all)
     await engine.dispose()

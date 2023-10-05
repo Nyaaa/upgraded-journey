@@ -1,5 +1,4 @@
 from itertools import zip_longest
-from typing import List
 
 from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
@@ -8,7 +7,7 @@ from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import crud, models
-from app.db import get_db
+from app.api.crud import get_db
 from . import schemas
 
 v1_app = FastAPI(version="1.1.0")
@@ -21,8 +20,8 @@ async def main():
 
 @v1_app.post("/submitData/")
 async def submit_data(
-    image_title: List[str],
-    image_file: List[UploadFile] = File(...),
+    image_title: list[str],
+    image_file: list[UploadFile] = File(...),
     passage: schemas.PassageBase = Body(...),  # NOSONAR
     coords: schemas.Coords = Body(...),
     user: schemas.UserBase = Body(...),
@@ -32,7 +31,7 @@ async def submit_data(
     if get_user:
         user = get_user
     else:
-        user = models.User(**user.dict(), hashed_password="test")
+        user = models.User(**user.model_dump(), hashed_password="test")
         await crud.commit(db, user)
     coords = await crud.create_coords(db, coords)
     passage = await crud.create_passage(
@@ -72,7 +71,7 @@ async def read_passage_by_id(
 
 
 @v1_app.get(
-    "/submitData/", response_model=schemas.Passage, response_model_exclude={"user"}
+    "/submitData/", response_model=list[schemas.Passage], response_model_exclude={"user"}
 )
 async def read_passages(user__email: EmailStr, db: AsyncSession = Depends(get_db)):
     return await crud.get_passage_by_email(db, email=user__email)
@@ -81,8 +80,8 @@ async def read_passages(user__email: EmailStr, db: AsyncSession = Depends(get_db
 @v1_app.patch("/submitData/{passage_id}", response_model=schemas.Passage)
 async def update_passage(
     passage_id: int,
-    image_title: List[str] = None,
-    image_file: List[UploadFile] = File(None),
+    image_title: list[str] = None,
+    image_file: list[UploadFile] = File(None),
     passage: schemas.PassageUpdate = None,
     coords: schemas.CoordsUpdate = None,
     db: AsyncSession = Depends(get_db),
@@ -95,10 +94,10 @@ async def update_passage(
         )
     upd_passage = upd_coords = upd_image = None
     if passage:
-        models.Passage(**passage.dict())  # force validation
+        models.Passage(**passage.model_dump())  # force validation
         upd_passage = await crud.update_instance(db, db_passage, passage)
     if coords:
-        models.Coords(**coords.dict())  # force validation
+        models.Coords(**coords.model_dump())  # force validation
         upd_coords = await crud.update_instance(db, db_passage.coords, coords)
     if image_file and isinstance(image_file, list):
         image_title = image_title[0].split(",") if image_title else ""

@@ -8,10 +8,21 @@ import aiofiles
 from fastapi import UploadFile
 from pydantic import BaseModel
 from sqlalchemy import Row
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from . import models, schemas
+from app.settings import settings
+
+engine = create_async_engine(settings.DATABASE_URL)
+async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+# Dependency
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session() as session:
+        yield session
 
 
 async def get_object_by_id(db: AsyncSession, model, obj_id: int):
@@ -46,7 +57,7 @@ async def create_passage(
     user: models.User,
 ) -> models.Passage:
     db_passage = models.Passage(
-        **passage.dict(),
+        **passage.model_dump(),
         add_time=datetime.utcnow(),
         status="new",
         coords_id=coords.id,
@@ -56,7 +67,7 @@ async def create_passage(
 
 
 async def create_coords(db: AsyncSession, coords: schemas.Coords) -> models.Coords:
-    db_coords = models.Coords(**coords.dict())
+    db_coords = models.Coords(**coords.model_dump())
     return await commit(db, db_coords)
 
 

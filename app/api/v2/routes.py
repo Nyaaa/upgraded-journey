@@ -1,6 +1,5 @@
 from datetime import timedelta
 from itertools import zip_longest
-from typing import List, Optional
 
 from fastapi import Depends, File, UploadFile, Body, FastAPI, HTTPException, status
 from fastapi.responses import RedirectResponse
@@ -9,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import auth
 from app.api import crud, schemas, models
-from app.db import get_db
+from app.api.crud import get_db
 
 tags_metadata = [
     {
@@ -40,7 +39,7 @@ async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_d
                 "message": "Email already registered",
             },
         )
-    user_dict = user.dict()
+    user_dict = user.model_dump()
     hashed_password = auth.str_to_hash(user_dict.pop("password"))
     user = models.User(**user_dict | {"hashed_password": hashed_password})
     return await crud.commit(db=db, instance=user)
@@ -98,8 +97,8 @@ async def read_users_me(
 @v2_app.post("/passages/", response_model=schemas.Passage, tags=["Passes"])
 async def create_passage(
     user: models.User = Depends(auth.get_current_active_user),
-    image_title: Optional[List[str]] = None,
-    image_file: Optional[List[UploadFile]] = File(None),
+    image_title: list[str] = None,
+    image_file: list[UploadFile] = File(None),
     passage: schemas.PassageBase = Body(...),  # NOSONAR
     coords: schemas.Coords = Body(...),
     db: AsyncSession = Depends(get_db),
