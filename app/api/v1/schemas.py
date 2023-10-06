@@ -6,7 +6,7 @@ from pydantic_extra_types.phone_numbers import PhoneNumber
 
 from app.api.validators import JSONValidatorMixin
 
-OPTIONS = Literal["new", "pending", "accepted", "rejected"]
+OPTIONS = Literal['new', 'pending', 'accepted', 'rejected']
 
 
 class Coords(BaseModel, JSONValidatorMixin):
@@ -63,4 +63,6 @@ class UserBase(BaseModel, JSONValidatorMixin):
     first_name: str
     last_name: str
     middle_name: Optional[str] = None
-    phone: Optional[PhoneNumber] = Field(None, json_schema_extra={"example": "+1-206-555-01-00"})
+    phone: Optional[PhoneNumber] = Field(
+        None, json_schema_extra={'example': '+1-206-555-01-00'}
+    )

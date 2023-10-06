@@ -26,8 +26,8 @@ async def test_get_all_obj(async_session, create_user):
 
 @pytest.mark.asyncio
 async def test_get_user_by_email(async_session, create_user):
-    result = await crud.get_user_by_email(async_session, USER["email"])
-    assert result.email == USER["email"]
+    result = await crud.get_user_by_email(async_session, USER['email'])
+    assert result.email == USER['email']
 
 
 @pytest.mark.asyncio
@@ -39,7 +39,7 @@ async def test_commit(async_session):
 
 @pytest.mark.asyncio
 async def test_get_passage_by_email(async_session, create_passage):
-    result = await crud.get_passage_by_email(async_session, USER["email"])
+    result = await crud.get_passage_by_email(async_session, USER['email'])
     assert isinstance(result, list)
     assert len(result) == 1
     assert isinstance(result[0], models.Passage)
@@ -49,9 +49,9 @@ async def test_get_passage_by_email(async_session, create_passage):
 @pytest.mark.asyncio
 async def test_write_file_to_hdd(async_session):
     orig_db_url = async_session.bind.url
-    async_session.bind.url = "test"
-    _bin = BytesIO("test".encode("utf-8"))
-    files = [("image_title1", UploadFile(file=_bin, filename="test"))]
+    async_session.bind.url = 'test'
+    _bin = BytesIO('test'.encode('utf-8'))
+    files = [('image_title1', UploadFile(file=_bin, filename='test'))]
     saved = await crud.create_image(async_session, files, 1)
     async_session.bind.url = orig_db_url
 

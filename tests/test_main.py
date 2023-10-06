@@ -7,7 +7,7 @@ from app.api.crud import get_db
 
 @pytest.mark.asyncio
 async def test_health_check(client: AsyncClient):
-    for index in "/", "/v1/", "/v2/":
+    for index in '/', '/v1/', '/v2/':
         response = await client.get(index, follow_redirects=True)
         assert response.status_code == 200
 

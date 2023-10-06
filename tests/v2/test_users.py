@@ -8,7 +8,7 @@ from app.api import schemas, models
 from app.api.v2 import routes
 from tests.sample_data import USER2, USER
 
-URL = "/v2/users/"
+URL = '/v2/users/'
 
 
 @pytest.mark.asyncio
@@ -19,23 +19,27 @@ async def test_users_get_all(client: AsyncClient, create_user: models.User):
 
 
 @pytest.mark.asyncio
-async def test_users_get_one(async_session: AsyncSession, create_user: models.User):
+async def test_users_get_one(
+    async_session: AsyncSession, create_user: models.User
+):
     user = await routes.read_user_by_id(user_id=1, db=async_session)
     assert user.id == 1
 
 
 @pytest.mark.asyncio
 async def test_users_post(async_session: AsyncSession):
-    user = schemas.UserCreate(**USER2 | {"password": "string", "phone": "+1-206-555-01-00"})
+    user = schemas.UserCreate(
+        **USER2 | {'password': 'string', 'phone': '+1-206-555-01-00'}
+    )
     response = await routes.create_user(db=async_session, user=user)
-    assert response.email == USER2["email"]
+    assert response.email == USER2['email']
     assert response.is_active is True
-    assert response.phone == "tel:+1-206-555-0100"
+    assert response.phone == 'tel:+1-206-555-0100'
 
 
 @pytest.mark.asyncio
 async def test_users_wrong_phone(client: AsyncClient):
-    user = USER2 | {"password": "string", "phone": "111"}
+    user = USER2 | {'password': 'string', 'phone': '111'}
     response = await client.post(url=URL, json=user)
     assert response.status_code == 422
     # assert response.json()["detail"][0]["msg"] == "Invalid phone number format"
@@ -45,11 +49,14 @@ async def test_users_wrong_phone(client: AsyncClient):
 async def test_users_duplicate_email(
     async_session: AsyncSession, create_user: models.User
 ):
-    user = schemas.UserCreate(**USER | {"password": "string"})
+    user = schemas.UserCreate(**USER | {'password': 'string'})
     with pytest.raises(HTTPException) as err:
         await routes.create_user(db=async_session, user=user)
     assert err.value.status_code == 400
-    assert err.value.detail == {"status": 400, "message": "Email already registered"}
+    assert err.value.detail == {
+        'status': 400,
+        'message': 'Email already registered',
+    }
 
 
 @pytest.mark.asyncio
@@ -57,13 +64,13 @@ async def test_user_not_found(async_session: AsyncSession):
     with pytest.raises(HTTPException) as err:
         await routes.read_user_by_id(db=async_session, user_id=10)
     assert err.value.status_code == 404
-    assert err.value.detail == {"status": 404, "message": "User not found"}
+    assert err.value.detail == {'status': 404, 'message': 'User not found'}
 
 
 @pytest.mark.asyncio
 async def test_login(create_user: models.User, async_session: AsyncSession):
     form = OAuth2PasswordRequestForm(
-        username=create_user.email, password="string", scope=""
+        username=create_user.email, password='string', scope=''
     )
     token = await routes.login(form, async_session)
     assert token
@@ -72,7 +79,7 @@ async def test_login(create_user: models.User, async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_login_failed(async_session: AsyncSession):
-    form = OAuth2PasswordRequestForm(username="", password="", scope="")
+    form = OAuth2PasswordRequestForm(username='', password='', scope='')
     with pytest.raises(HTTPException) as err:
         await routes.login(form, async_session)
     assert err.value.status_code == 401
@@ -83,8 +90,8 @@ async def test_get_restricted_access(
     client: AsyncClient, create_user: models.User, async_session: AsyncSession
 ):
     token = await test_login(create_user, async_session)
-    key = token["access_token"]
+    key = token['access_token']
     response = await client.get(
-        url=f"{URL}me/", headers={"Authorization": f"Bearer {key}"}
+        url=f'{URL}me/', headers={'Authorization': f'Bearer {key}'}
     )
     assert response.status_code == 200

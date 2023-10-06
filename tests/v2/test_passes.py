@@ -9,11 +9,13 @@ from app.api import schemas, models
 from app.api.v2 import routes
 from tests.sample_data import COORDS, BIN_FILE, PASSAGE
 
-URL = "/v2/passages/"
+URL = '/v2/passages/'
 
 
 @pytest.mark.asyncio
-async def test_pass_get_all(client: AsyncClient, create_passage: models.Passage):
+async def test_pass_get_all(
+    client: AsyncClient, create_passage: models.Passage
+):
     response = await client.get(URL)
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -30,7 +32,7 @@ async def test_pass_post_no_image(
     )
 
     assert response.id == 1
-    assert response.status == "new"
+    assert response.status == 'new'
 
 
 @pytest.mark.asyncio
@@ -42,10 +44,10 @@ async def test_pass_post_with_image(
     response = await routes.create_passage(
         passage=passage,
         coords=coords,
-        image_title=["image_title1,image_title2"],
+        image_title=['image_title1,image_title2'],
         image_file=[
-            UploadFile(file=BIN_FILE, filename="test"),
-            UploadFile(file=BIN_FILE, filename="test"),
+            UploadFile(file=BIN_FILE, filename='test'),
+            UploadFile(file=BIN_FILE, filename='test'),
         ],
         db=async_session,
         user=create_user,
@@ -68,4 +70,4 @@ async def test_passage_not_found(async_session: AsyncSession):
     with pytest.raises(HTTPException) as err:
         await routes.read_passage_by_id(db=async_session, passage_id=10)
     assert err.value.status_code == 404
-    assert err.value.detail == {"status": 404, "message": "Passage not found"}
+    assert err.value.detail == {'status': 404, 'message': 'Passage not found'}

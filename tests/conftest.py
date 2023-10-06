@@ -2,7 +2,11 @@ from typing import AsyncGenerator
 
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+    async_sessionmaker,
+)
 
 from app import main
 from app.api import crud, models, schemas
@@ -10,11 +14,13 @@ from app.api.v1.routes import v1_app
 from app.api.v2.routes import v2_app
 from tests.sample_data import USER, COORDS, PASSAGE
 
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite://"
+SQLALCHEMY_DATABASE_URL = 'sqlite+aiosqlite://'
 engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
-SessionTesting = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+SessionTesting = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest_asyncio.fixture
@@ -40,7 +46,9 @@ async def create_passage(
 
 
 @pytest_asyncio.fixture
-async def client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+async def client(
+    async_session: AsyncSession,
+) -> AsyncGenerator[AsyncClient, None]:
     def _get_test_db():
         yield async_session
 
@@ -50,11 +58,13 @@ async def client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, Non
     v1_app.dependency_overrides[crud.get_db] = _get_test_db
     v2_app.dependency_overrides[crud.get_db] = _get_test_db
 
-    async with AsyncClient(app=main.app, base_url="http://127.0.0.1:8000/") as _client:
+    async with AsyncClient(
+        app=main.app, base_url='http://127.0.0.1:8000/'
+    ) as _client:
         yield _client
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope='function')
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
     async with SessionTesting() as s:
         async with engine.begin() as conn:

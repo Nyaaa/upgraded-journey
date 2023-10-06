@@ -33,7 +33,7 @@ class Passage(PassageBase):
     id: int
     user_id: int
     add_time: datetime
-    status: Literal["new", "pending", "accepted", "rejected"]
+    status: Literal['new', 'pending', 'accepted', 'rejected']
     coords: Coords
     images: list[Image]
 
@@ -43,7 +43,9 @@ class UserBase(BaseModel):
     first_name: str
     last_name: str
     middle_name: Optional[str] = None
-    phone: Optional[PhoneNumber] = Field(None, json_schema_extra={"example": "+1-206-555-01-00"})
+    phone: Optional[PhoneNumber] = Field(
+        None, json_schema_extra={'example': '+1-206-555-01-00'}
+    )
 
 
 class UserCreate(UserBase):
