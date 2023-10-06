@@ -11,13 +11,17 @@ from tests.sample_data import USER2, USER
 
 
 @pytest.mark.asyncio
-async def test_get_obj_by_id(async_session: AsyncSession, create_user: models.User):
+async def test_get_obj_by_id(
+    async_session: AsyncSession, create_user: models.User
+):
     result = await crud.get_object_by_id(async_session, models.User, 1)
     assert result.id == 1
 
 
 @pytest.mark.asyncio
-async def test_get_all_obj(async_session: AsyncSession, create_user: models.User):
+async def test_get_all_obj(
+    async_session: AsyncSession, create_user: models.User
+):
     user = models.User(**USER2)
     async_session.add(user)
     await async_session.commit()
@@ -26,7 +30,9 @@ async def test_get_all_obj(async_session: AsyncSession, create_user: models.User
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_email(async_session: AsyncSession, create_user: models.User):
+async def test_get_user_by_email(
+    async_session: AsyncSession, create_user: models.User
+):
     result = await crud.get_user_by_email(async_session, USER['email'])
     assert result.email == USER['email']
 
@@ -39,7 +45,9 @@ async def test_commit(async_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_get_passage_by_email(async_session: AsyncSession, create_passage: models.Passage):
+async def test_get_passage_by_email(
+    async_session: AsyncSession, create_passage: models.Passage
+):
     result = await crud.get_passage_by_email(async_session, USER['email'])
     assert isinstance(result, list)
     assert len(result) == 1

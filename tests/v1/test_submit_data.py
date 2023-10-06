@@ -93,7 +93,6 @@ async def test_pass_patch(client: AsyncClient):
 
     assert update.status_code == 200
     assert update.json() == {'state': 1, 'message': None}
-    assert len(update.json()['images']) == 4
 
 
 @pytest.mark.asyncio
