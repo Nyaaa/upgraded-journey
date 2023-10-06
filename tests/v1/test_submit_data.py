@@ -121,7 +121,7 @@ async def test_pass_patch_status(
 
 
 @pytest.mark.asyncio
-async def test_pass_patch(
+async def test_pass_patch_image(
     create_passage: models.Passage, async_session: AsyncSession
 ):
     new_status = await update_passage(
